@@ -1,0 +1,1256 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Аксиомы программной инженерии</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400&family=Onest:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F6F3; --paper-2:#E9ECE6; --ink:#1D2433; --ink-2:#4F5868; --ink-3:#8A92A0;
+  --rule:#D3D8D0; --axiom:#2B4CC9; --axiom-wash:#E2E8F8; --warn:#A33A2B;
+  --grid:rgba(43,76,201,.07); --code-bg:#1D2433; --code-ink:#E4E8EF; --code-c:#8C9BB3;
+  --serif:"Literata","PT Serif",Georgia,serif;
+  --sans:"Onest","PT Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#14171D; --paper-2:#1D212A; --ink:#E3E6EB; --ink-2:#A6ADBA; --ink-3:#6C7483;
+    --rule:#2D323C; --axiom:#8FA5FF; --axiom-wash:#222A44; --warn:#E3897A;
+    --grid:rgba(143,165,255,.07); --code-bg:#0E1115; --code-ink:#DCE1E9; --code-c:#7D8AA0;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:24px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);
+  font-size:18px;line-height:1.72;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--axiom);outline-offset:3px;border-radius:2px}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:248px minmax(0,1fr)}
+.toc{position:sticky;top:0;height:100vh;overflow-y:auto;padding:44px 22px 40px 28px;
+  border-right:1px solid var(--rule);font-family:var(--sans);font-size:14px;line-height:1.35}
+.toc .brand{display:block;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:28px;letter-spacing:-.01em}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{margin:0}
+.toc a{display:block;text-decoration:none;color:var(--ink-2);padding:4px 0 4px 12px;border-left:2px solid transparent}
+.toc a:hover{color:var(--ink)}
+.toc a.active{color:var(--ink);border-left-color:var(--axiom)}
+.toc .grp{margin-top:18px}
+.toc .grp > a{color:var(--ink);font-weight:600}
+.toc .grp ol a{padding-left:24px;font-size:13.5px}
+.toc-toggle{display:none}
+
+main{padding:64px 56px 140px;max-width:1140px;min-width:0}
+.col{max-width:40rem}
+
+/* ---------- hero ---------- */
+.hero h1{font-family:var(--sans);font-weight:700;font-size:clamp(40px,6vw,68px);line-height:1.02;
+  letter-spacing:-.035em;margin:0 0 28px;max-width:12ch}
+.hero .lede{font-size:21px;line-height:1.6;color:var(--ink);max-width:36rem;margin:0 0 12px}
+.hero .meta{font-family:var(--sans);font-size:14px;color:var(--ink-2);margin:0 0 40px}
+.map-wrap{border:1px solid var(--rule);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;padding:18px 18px 8px;overflow-x:auto}
+.map-wrap svg{display:block;width:100%;min-width:720px;height:auto}
+.map-cap{font-family:var(--sans);font-size:13.5px;color:var(--ink-2);margin:10px 0 0;max-width:40rem}
+.m-edge{fill:none;stroke:var(--ink-3);stroke-opacity:.35;stroke-width:1.1;transition:stroke .15s,stroke-opacity .15s}
+.m-edge.on{stroke:var(--axiom);stroke-opacity:1;stroke-width:1.8}
+.m-node{cursor:pointer;transition:opacity .15s}
+.m-node.dim,.m-edge.dim{opacity:.18}
+.m-node:focus{outline:none}
+.m-node:focus-visible .m-shape{stroke:var(--axiom);stroke-width:2}
+.m-fact .m-shape{fill:var(--ink)}
+.m-fact text{fill:var(--paper);font-family:var(--sans);font-size:14px}
+.m-axiom .m-shape{fill:var(--axiom-wash);stroke:var(--axiom);stroke-width:1}
+.m-axiom text{fill:var(--axiom);font-family:var(--sans);font-size:13.5px}
+.m-pr .m-dot{fill:var(--ink)}
+.m-pr text{font-family:var(--sans);font-size:14px;fill:var(--ink)}
+.m-pr .who{fill:var(--ink-2)}
+.m-pr:hover text,.m-pr.on text{fill:var(--axiom)}
+.m-pr.on .m-dot{fill:var(--axiom)}
+.m-part{font-family:var(--sans);font-size:12px;fill:var(--ink-3);text-anchor:end}
+.m-col{font-family:var(--sans);font-size:12.5px;fill:var(--ink-2)}
+
+/* ---------- sections ---------- */
+section{margin-top:112px}
+h2{font-family:var(--sans);font-weight:700;font-size:36px;line-height:1.1;letter-spacing:-.025em;margin:0 0 20px}
+.part-head{display:grid;grid-template-columns:auto 1fr;column-gap:22px;align-items:start;
+  border-top:2px solid var(--ink);padding-top:22px;max-width:40rem}
+.part-num{font-family:var(--sans);font-weight:300;font-size:84px;line-height:.82;color:var(--axiom);letter-spacing:-.04em}
+.part-head h2{margin:4px 0 10px}
+.part-head p{margin:0;color:var(--ink-2);font-size:18px}
+
+p{margin:0 0 1.05em}
+.principle{display:grid;grid-template-columns:minmax(0,40rem) 17rem;column-gap:3rem;margin-top:80px}
+.principle > .body{grid-column:1;min-width:0}
+.principle > .author{grid-column:2;grid-row:1;align-self:start;position:sticky;top:28px}
+h3{font-family:var(--sans);font-weight:700;font-size:28px;line-height:1.15;letter-spacing:-.02em;margin:0 0 8px}
+.byline{font-family:var(--sans);font-size:15px;color:var(--ink-2);margin:0 0 22px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.byline .sep{width:1px;height:14px;background:var(--rule)}
+.ax{position:relative;display:inline-block;font-family:var(--sans);font-size:12.5px;font-weight:600;line-height:1;
+  color:var(--axiom);background:var(--axiom-wash);padding:5px 8px 4px;border-radius:999px;text-decoration:none;white-space:nowrap}
+.ax.f{color:var(--ink);background:var(--paper-2)}
+.ax[data-tip]:hover::after,.ax[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 7px);
+  width:max-content;max-width:270px;white-space:normal;background:var(--ink);color:var(--paper);font-weight:400;
+  font-size:13px;line-height:1.4;padding:7px 10px;border-radius:4px;z-index:20;pointer-events:none}
+.lead{font-family:var(--sans);font-weight:600;font-size:.88em;letter-spacing:-.005em}
+.lead.warn{color:var(--warn)}
+.body .note{font-family:var(--sans);font-size:15px;line-height:1.55;color:var(--ink-2);border-left:3px solid var(--axiom);padding:4px 0 4px 14px;margin:0 0 1.4em}
+.body ol.points{margin:0 0 1.2em;padding-left:1.6em}
+.body ol.points li{margin:0 0 .6em;padding-left:.3em}
+.body ol.points li::marker{font-family:var(--sans);font-weight:700;color:var(--ink-2)}
+.body h4.sub{font-family:var(--sans);font-weight:700;font-size:22px;line-height:1.25;letter-spacing:-.015em;margin:2.2em 0 .5em}
+em{font-style:italic}
+.term{font-style:italic}
+
+pre{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:13.5px;line-height:1.6;
+  padding:16px 18px;border-radius:6px;overflow-x:auto;margin:0 0 1.2em;tab-size:4;font-variant-ligatures:none}
+pre .c{color:var(--code-c)}
+code{font-family:var(--mono);font-size:.84em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+pre code{background:none;padding:0;font-size:inherit}
+.code-tag{font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:.02em;margin:0 0 6px}
+.code-tag.bad{color:var(--warn)}
+.code-tag.good{color:var(--axiom)}
+.code-tag + pre{margin-bottom:1.4em}
+
+/* ---------- схема ---------- */
+.fig{margin:0 0 .5em;overflow-x:auto}
+.fig svg{display:block;width:100%;min-width:600px;height:auto}
+.fig .mod{fill:none;stroke:var(--rule);stroke-width:1;stroke-dasharray:4 3}
+.fig .cls{fill:var(--paper-2);stroke:var(--rule);stroke-width:1}
+.fig .proto{fill:var(--axiom-wash);stroke:var(--axiom);stroke-width:1}
+.fig text{font-family:var(--sans);fill:var(--ink)}
+.fig .cap{font-size:11.5px;font-weight:700;letter-spacing:.14em;fill:var(--ink-3)}
+.fig .file{font-family:var(--mono);font-size:10.5px;fill:var(--ink-3)}
+.fig .name{font-size:12.5px;text-anchor:middle}
+.fig .lbl{font-size:11.5px;text-anchor:middle;fill:var(--ink-3)}
+.fig .lbl.key{fill:var(--axiom);font-weight:600}
+.fig .lbl.verdict{font-weight:600;fill:var(--ink-2)}
+.fig .arr{fill:none;stroke-width:1.5;stroke:var(--ink-3)}
+.fig .arr.key{stroke:var(--axiom);stroke-width:2}
+.fig .mk-dim{fill:var(--ink-3)}
+.fig .mk-key{fill:var(--axiom)}
+.fig-cap{font-family:var(--sans);font-size:13.5px;line-height:1.5;color:var(--ink-2);margin:0 0 1.5em}
+
+/* ---------- author aside ---------- */
+.author{background:var(--paper-2);padding:18px 18px 16px;font-family:var(--sans);font-size:14.5px;line-height:1.5;border-radius:3px}
+.author h4{font-size:16px;font-weight:700;margin:0;letter-spacing:-.01em}
+.author .years{color:var(--ink-2);margin:0 0 10px;font-size:13.5px}
+.author p{margin:0 0 .75em}
+.author .read{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--rule);color:var(--ink-2)}
+.author .read b{color:var(--ink);font-weight:600}
+
+/* ---------- foundation ---------- */
+.facts,.axioms{margin:28px 0 8px;padding:0;max-width:40rem}
+.facts > div,.axioms > div{display:grid;grid-template-columns:3.6rem 1fr;column-gap:14px;padding:14px 0;border-top:1px solid var(--rule)}
+.facts dt,.axioms dt{font-family:var(--sans);font-weight:300;font-size:30px;line-height:1;letter-spacing:-.03em;padding-top:2px}
+.axioms dt{color:var(--axiom)}
+.facts dd,.axioms dd{margin:0}
+.facts dd b,.axioms dd b{font-family:var(--sans);font-weight:600;font-size:17px;display:block;margin-bottom:3px;letter-spacing:-.01em}
+.axioms > div:target{background:var(--axiom-wash)}
+
+/* ---------- tensions & checklist ---------- */
+.tension{max-width:40rem;margin-top:34px}
+.tension h3{font-size:21px;margin-bottom:10px}
+.checklist{list-style:none;margin:28px 0 0;padding:0;max-width:44rem}
+.checklist li{display:grid;grid-template-columns:6.4rem 1fr;column-gap:14px;padding:13px 0;border-top:1px solid var(--rule);align-items:baseline}
+.checklist .tag{font-family:var(--sans);font-size:13px;color:var(--ink-2)}
+.checklist .tag .ax{margin-right:2px}
+footer{margin-top:96px;padding-top:18px;border-top:1px solid var(--rule);font-family:var(--sans);font-size:13.5px;color:var(--ink-2);max-width:40rem}
+
+/* ---------- responsive ---------- */
+@media (max-width:1240px){
+  .principle{grid-template-columns:minmax(0,40rem)}
+  .principle > .author{grid-column:1;grid-row:auto;position:static;margin:10px 0 0;max-width:40rem}
+}
+@media (max-width:920px){
+  .layout{grid-template-columns:1fr}
+  .toc{position:fixed;z-index:50;top:0;left:0;bottom:0;width:min(300px,84vw);height:auto;background:var(--paper);
+    transform:translateX(-102%);transition:transform .2s ease;box-shadow:0 0 0 100vmax rgba(0,0,0,0);padding-top:64px}
+  .toc.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+  html{scroll-padding-top:64px}
+  .toc-toggle{display:block;position:fixed;z-index:60;top:0;left:0;right:0;text-align:left;font-family:var(--sans);font-size:14px;font-weight:600;
+    background:var(--paper);color:var(--ink);border:0;border-bottom:1px solid var(--rule);padding:14px 20px;cursor:pointer}
+  .toc-toggle::before{content:"";display:inline-block;width:14px;height:10px;margin-right:10px;vertical-align:0;
+    background:linear-gradient(var(--ink),var(--ink)) 0 0/100% 2px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 4px/100% 2px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 8px/100% 2px no-repeat}
+  main{padding:72px 20px 100px}
+  body{font-size:17px}
+  .hero .lede{font-size:19px}
+  section{margin-top:84px}
+  .principle{margin-top:64px}
+  h3{font-size:24px}
+  .part-num{font-size:64px}
+  .checklist li{grid-template-columns:1fr}
+  .checklist .tag{margin-bottom:2px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<button class="toc-toggle" aria-expanded="false" aria-controls="toc">Содержание</button>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="Содержание">
+  <a class="brand" href="#top">Аксиомы программной инженерии</a>
+  <ol>
+    <li><a href="#foundation">Два факта и шесть аксиом</a></li>
+    <li class="grp"><a href="#part-1">I. Границы</a>
+      <ol>
+        <li><a href="#parnas">Сокрытие информации</a></li>
+        <li><a href="#dijkstra">Разделение ответственности</a></li>
+        <li><a href="#constantine">Зацепление и связность</a></li>
+        <li><a href="#connascence">Connascence</a></li>
+      </ol></li>
+    <li class="grp"><a href="#part-2">II. Контракты</a>
+      <ol>
+        <li><a href="#liskov">Подстановка по поведению</a></li>
+        <li><a href="#meyer">Проектирование по контракту</a></li>
+        <li><a href="#hyrum">Закон Хайрама</a></li>
+      </ol></li>
+    <li class="grp"><a href="#part-3">III. Сложность</a>
+      <ol>
+        <li><a href="#brooks">Существенная и случайная сложность</a></li>
+        <li><a href="#hickey">Переплетение</a></li>
+        <li><a href="#ousterhout">Глубокие модули</a></li>
+      </ol></li>
+    <li class="grp"><a href="#part-4">IV. Структура</a>
+      <ol>
+        <li><a href="#martin">Стабильные зависимости</a></li>
+        <li><a href="#conway">Закон Конвея</a></li>
+      </ol></li>
+    <li class="grp"><a href="#part-5">V. Эволюция</a>
+      <ol>
+        <li><a href="#gall">Закон Галла</a></li>
+        <li><a href="#cunningham">Технический долг</a></li>
+        <li><a href="#metz">Неправильная абстракция</a></li>
+      </ol></li>
+    <li class="grp"><a href="#tensions">Где принципы спорят</a></li>
+    <li><a href="#checklist">Вопросы для дизайн-ревью</a></li>
+    <li><a href="#reading">Что читать дальше</a></li>
+  </ol>
+</nav>
+
+<main id="top">
+
+<header class="hero">
+  <h1>Аксиомы программной инженерии</h1>
+  <p class="lede">Откуда берутся SOLID, DRY и чистая архитектура, почему они работают и где перестают. Пятнадцать идей классиков, выведенных из двух фактов о мире и шести аксиом.</p>
+  <p class="meta">Около 30 минут чтения. Для инженеров, которые уже знают правила и хотят понять, на чём они держатся.</p>
+  <div class="map-wrap"><svg id="map" viewBox="0 0 960 560" role="img" aria-label="Карта вывода: факты, аксиомы и принципы"></svg></div>
+  <p class="map-cap">Карта вывода. Наведите на узел, чтобы увидеть, из чего он следует и что из него вытекает. Нажмите на принцип, чтобы перейти к нему. На узком экране карту можно листать вбок.</p>
+</header>
+
+<section id="foundation">
+  <div class="col">
+    <h2>Два факта и шесть аксиом</h2>
+    <p>Принципы проектирования обычно передают как правила: делай так, не делай этак. Правила легко запомнить и так же легко применить не к месту. Здесь всё устроено иначе. Мы начинаем с двух наблюдений о мире, которые трудно оспорить, выводим из них шесть аксиом, а знаменитые принципы рассматриваем как теоремы. Если понимаешь, из чего теорема следует, видишь и границы, за которыми она перестаёт работать.</p>
+  </div>
+
+  <div class="principle" style="margin-top:36px">
+    <div class="body">
+      <dl class="facts">
+        <div id="ax-F1"><dt>Ф1</dt><dd><b>Программы меняются, и предсказать как — нельзя</b>
+          Кент Бек назвал это эквивалентностью Константина. Стоимость программы примерно равна стоимости её изменений: первая версия — лишь малая доля полной цены. Затраты на изменения распределены неравномерно, их определяют немногие крупные изменения, которые каскадом расходятся по системе. Каскад возникает там, где элементы зацеплены. Бек сводит цепочку к формуле: стоимость ПО ≈ стоимость изменений ≈ стоимость крупных изменений ≈ зацепление.</dd></div>
+        <div id="ax-F2"><dt>Ф2</dt><dd><b>Человек удерживает в голове очень мало</b>
+          Дейкстра в тьюринговской лекции «The Humble Programmer» (1972) говорил, что компетентный программист полностью осознаёт ограниченность своего черепа и строит работу с учётом этого. Если для безопасной правки нужно понимать полсистемы, система сломана, даже если проходит тесты.</dd></div>
+      </dl>
+      <p style="margin-top:28px">Вся программная инженерия работает на пересечении этих фактов. Нужно, чтобы изменение затрагивало мало кода и чтобы для изменения требовалось понимать мало кода. Из этого следуют шесть аксиом.</p>
+      <dl class="axioms">
+        <div id="ax-A1"><dt>А1</dt><dd><b>Сокрытие решений</b>Граница модуля проводится вокруг проектного решения, которое вероятно изменится: формата данных, алгоритма, внешнего сервиса. Каждое такое решение знает ровно один модуль.</dd></div>
+        <div id="ax-A2"><dt>А2</dt><dd><b>Связность и зацепление — одна ось</b>Что меняется вместе, лежит вместе. Что меняется независимо, разделено. У связи есть сила и дистанция: сильная связь внутри модуля нормальна, через границу опасна.</dd></div>
+        <div id="ax-A3"><dt>А3</dt><dd><b>Зависимости направлены к стабильности</b>Изменчивое зависит от стабильного, а не наоборот. Абстракцию объявляет потребитель, в своих терминах и под свои нужды.</dd></div>
+        <div id="ax-A4"><dt>А4</dt><dd><b>Абстракция — это контракт, а не сигнатура</b>Совпадать должно поведение: пред- и постусловия, инварианты. И всё наблюдаемое рано или поздно станет чьей-то зависимостью, обещано оно или нет.</dd></div>
+        <div id="ax-A5"><dt>А5</dt><dd><b>Косвенность стоит денег</b>Каждый слой добавляет то, что надо понимать. Абстракция оправдана, если прячет больше, чем добавляет. К стабильному можно прибивать гвоздями.</dd></div>
+        <div id="ax-A6"><dt>А6</dt><dd><b>Явное лучше скрытого</b>Самые дорогие связи не видны на границе модуля: общее изменяемое состояние, порядок вызовов, тайминг. Интерфейсы от них не спасают.</dd></div>
+      </dl>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Кент Бек</h4>
+      <p class="years">род. 1961</p>
+      <p>Создатель экстремального программирования и TDD в современном виде (сам он говорит, что TDD «переоткрыл»). Вместе с Эрихом Гаммой написал JUnit, стоял у истоков паттернов в ПО, подписал Agile-манифест.</p>
+      <p>В «Tidy First?» (2023) пересказал для нынешнего поколения идеи «Structured Design» Йордона и Константина, которую называет библией программной инженерии.</p>
+      <p class="read"><b>Читать:</b> «Tidy First?». Около ста страниц, последняя треть — компактная экономическая теория проектирования.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= PART I ================= -->
+<section id="part-1">
+  <header class="part-head">
+    <span class="part-num">I</span>
+    <div><h2>Границы</h2><p>Первый вопрос проектирования — где провести границы. Четыре идеи отвечают на него с разных сторон: что прятать, о чём думать отдельно, что держать вместе и как измерять силу связи.</p></div>
+  </header>
+
+  <article class="principle" id="parnas">
+    <div class="body">
+      <h3>Сокрытие информации</h3>
+      <div class="byline">Дэвид Парнас, 1972 <span class="sep"></span> <a class="ax" data-ax="A1" href="#ax-A1">А1</a></div>
+      <p>Парнас взял маленькую задачу — построение KWIC-индекса, отсортированного списка всех циклических сдвигов строк — и разбил её на модули двумя способами. Первый привычный: по модулю на каждый шаг обработки (ввод, сдвиги, сортировка, вывод). Второй — вокруг решений: каждый модуль прячет одно решение, например как строки хранятся в памяти. Обе версии работают одинаково. Разница проявляется при изменении: в первой смена формата хранения затрагивает все модули, потому что все они знают этот формат, во второй — один.</p>
+      <p>Вывод звучит почти очевидно, но нарушается постоянно. Делить систему по шагам алгоритма или по блок-схеме — плохой критерий. Хороший критерий — список решений, которые трудно принять или которые вероятно изменятся. Каждое такое решение должен знать ровно один модуль, а интерфейс строится так, чтобы о нём ничего не рассказывать.</p>
+      <p><span class="lead">Признаки в коде.</span> Типичный пайплайн данных: датафрейм проходит через десять шагов, и каждый обращается к колонкам по именам, зная их типы и смысл. Это декомпозиция по шагам обработки, и решение «какая у источника схема» ничем не спрятано: переименование одной колонки расходится по всему пайплайну. Другой признак: чтобы сменить базу данных или формат сериализации, приходится грепать весь репозиторий.</p>
+      <p><span class="lead warn">Когда вредит.</span> Прятать решение, которое не изменится, значит платить за косвенность впустую (А5). Парнас говорит о вероятных изменениях, а не о любых вообразимых. Искусство состоит в том, чтобы угадать, какие решения нестабильны.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Дэвид Парнас</h4>
+      <p class="years">род. 1941</p>
+      <p>Один из тех, кто превратил программирование в инженерную дисциплину. Руководил проектом переписывания бортового ПО штурмовика A-7E, где проверял свои идеи на реальной военной системе. Автор статьи «Software Aging» (1994) о том, почему программы стареют.</p>
+      <p>В 1985 году демонстративно вышел из консультативной группы по программе СОИ, доказывая, что достаточно надёжное ПО для неё написать невозможно.</p>
+      <p class="read"><b>Читать:</b> «On the Criteria To Be Used in Decomposing Systems into Modules». Шесть страниц.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="dijkstra">
+    <div class="body">
+      <h3>Разделение ответственности</h3>
+      <div class="byline">Эдсгер Дейкстра, 1974 <span class="sep"></span> <a class="ax f" data-ax="F2" href="#ax-F2">Ф2</a> <a class="ax" data-ax="A2" href="#ax-A2">А2</a></div>
+      <p>Термин <span class="term">separation of concerns</span> появился в заметке EWD447 «On the role of scientific thought». Дейкстра писал в ней не о модулях, а о способе думать: изучать один аспект задачи изолированно, ради него самого, помня, что остальные аспекты существуют. Например, сначала рассуждать о корректности программы и лишь потом, отдельно, о её эффективности. Попытка удерживать оба рассуждения одновременно проваливает оба. Модульная структура — следствие этой дисциплины мышления, а не наоборот.</p>
+      <p>Самое практичное воплощение принципа — отделение решений от эффектов. Гэри Бернхардт назвал этот паттерн «функциональное ядро, императивная оболочка»: правила предметной области — чистые функции над данными, а ввод-вывод, время, сеть и ретраи живут в тонком слое снаружи.</p>
+<pre><code><span class="c"># Смешано: чтобы проверить правило скидки, нужны база и часы</span>
+def apply_discount(order_id):
+    order = db.load(order_id)
+    if datetime.now().weekday() == 4 and order.total > 5000:
+        order.total *= Decimal("0.9")
+    db.save(order)
+
+<span class="c"># Разделено: правило — чистая функция, эффекты — у вызывающего</span>
+def discounted(total: Decimal, weekday: int) -> Decimal:
+    return total * Decimal("0.9") if weekday == 4 and total > 5000 else total</code></pre>
+      <p><span class="lead">Признаки в коде.</span> Бизнес-правило нельзя протестировать без базы или мока HTTP-клиента. Одна функция валидирует ввод, считает, пишет лог, ходит в сеть и повторяет попытки. Чтобы поменять политику ретраев, приходится читать бизнес-логику.</p>
+      <p><span class="lead warn">Когда вредит.</span> Разделение по техническим слоям (контроллеры, сервисы, репозитории) — тоже разделение аспектов. Но если каждая фича требует правки во всех слоях сразу, аспекты разрезаны поперёк оси изменений (А2), и такое разделение умножает работу.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Эдсгер Дейкстра</h4>
+      <p class="years">1930–2002</p>
+      <p>Нидерландский учёный, лауреат премии Тьюринга 1972 года. Алгоритм кратчайшего пути, семафоры, операционная система THE, структурное программирование.</p>
+      <p>Знаменитое письмо «Go To Statement Considered Harmful» (1968) вышло под заголовком, который придумал редактор, Никлаус Вирт. Больше тысячи пронумерованных рукописных заметок-EWD, которые Дейкстра рассылал коллегам, оцифрованы в архиве Техасского университета.</p>
+      <p class="read"><b>Читать:</b> «The Humble Programmer» (EWD340) и EWD447.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="constantine">
+    <div class="body">
+      <h3>Зацепление и связность</h3>
+      <div class="byline">Ларри Константин и Эд Йордон, 1960–1970-е <span class="sep"></span> <a class="ax f" data-ax="F1" href="#ax-F1">Ф1</a> <a class="ax" data-ax="A2" href="#ax-A2">А2</a></div>
+      <p>Константин сформулировал эти идеи ещё в 1960-х, а систематизировал в книге «Structured Design» (1979), написанной вместе с Йордоном. Цель проектирования там определена экономически: минимизировать стоимость программы. Зацепление (<span class="term">coupling</span>) показывает, насколько изменение одного модуля требует изменений в другом. Связность (<span class="term">cohesion</span>) — насколько элементы внутри модуля объединены общей целью. Это не два независимых показателя, а одна величина, измеренная внутри и снаружи границы: если в модуль сложены вещи, меняющиеся по разным причинам, его внешние связи неизбежно растут.</p>
+      <p>Константин ранжировал виды зацепления. Самое безобидное — передача данных через параметры. Хуже управляющее зацепление, когда вызывающий передаёт флаг, указывающий вызываемому, что делать: так вызывающий оказывается знаком с внутренней логикой вызываемого. Ещё хуже общие глобальные данные и прямое обращение к внутренностям чужого модуля.</p>
+      <p><span class="lead">Признаки в коде.</span> Параметр <code>mode</code> или <code>is_legacy</code>, от которого ветвится вся функция. Модуль <code>utils</code>, куда складывают всё подряд, — связность случайная. Самый объективный признак хранит история версий: файлы, которые годами меняются в одних и тех же коммитах, зацеплены, даже если друг друга не импортируют. Адам Торнхилл превратил анализ совместных изменений в целую методику, а простейший вариант собирается из <code>git log --name-only</code> за вечер.</p>
+      <p><span class="lead warn">Когда вредит.</span> Разрывать зацепление любой ценой бессмысленно: связь не исчезает, а переезжает, и уменьшение её в одном месте часто увеличивает в другом. Задача не в том, чтобы связей не было, а в том, чтобы сильные связи оказались внутри границ.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Ларри Константин</h4>
+      <p class="years">род. 1943</p>
+      <p>Автор понятий coupling и cohesion и соавтор структурного проектирования, на котором выросло поколение инженеров 1970–80-х. Позже занялся проектированием взаимодействия и предложил usage-centered design.</p>
+      <p>В 1970-х параллельно работал семейным терапевтом, а позже начал писать триллеры под псевдонимом Лиор Самсон.</p>
+      <p class="read"><b>Читать:</b> «Structured Design» давно не переиздаётся; современный пересказ её идей — «Tidy First?» Бека и «Your Code as a Crime Scene» Торнхилла.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="connascence">
+    <div class="body">
+      <h3>Connascence</h3>
+      <div class="byline">Мейлир Пейдж-Джонс, 1992 <span class="sep"></span> <a class="ax" data-ax="A2" href="#ax-A2">А2</a> <a class="ax" data-ax="A6" href="#ax-A6">А6</a></div>
+      <p>Слово означает «рождённые вместе». Пейдж-Джонс ввёл его в статье для Communications of the ACM, когда стало ясно, что мер зацепления и связности из структурного проектирования для объектного кода не хватает. Определение простое: два элемента связаны, если можно представить изменение одного, после которого второй придётся изменить или хотя бы тщательно перепроверить, чтобы система осталась корректной.</p>
+      <p>Главное, что даёт эта идея, — шкала силы связи. Статические виды видны в исходном коде; от слабых к сильным это согласие об имени, о типе, о смысле значений (что статус 3 означает «отменён»), о позиции аргументов и об алгоритме (обе стороны должны одинаково считать контрольную сумму). Динамические видны только при выполнении и сильнее статических: порядок вызовов, тайминг, согласованные значения (доли должны давать в сумме единицу), идентичность (обе стороны должны ссылаться на один объект).</p>
+      <p>Джим Вейрих в докладе «Grand Unified Theory of Software Design» свёл работу со шкалой к трём правилам: уменьшай общую степень связи; там, где связь пересекает границу, делай её как можно слабее; внутри границы сильная связь допустима. Рефакторинг при этом превращается в понятную операцию — перевод связи в более слабый вид.</p>
+<pre><code><span class="c"># Позиция и смысл: вызывающий знает порядок и магические числа</span>
+create_user("sam", "sam@example.com", True, 3)
+
+<span class="c"># Имя и тип: знание сжалось до того, что видно в сигнатуре</span>
+create_user(name="sam", email="sam@example.com",
+            is_admin=True, status=UserStatus.INVITED)</code></pre>
+      <p><span class="lead">Признаки в коде.</span> Кортежи, которые распаковывают по индексу в пяти местах. Магические строки, обязанные совпадать в разных файлах. Методы, которые надо вызывать в строгом порядке: сначала <code>connect</code>, потом <code>auth</code>. Два сервиса, которые независимо реализуют одну формулу и должны давать одинаковый результат.</p>
+      <p><span class="lead warn">Когда вредит.</span> Шкала задаёт направление, а не требование. Сильная связь внутри маленькой функции нормальна, и заворачивать каждую пару аргументов в объект-параметр не нужно.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Мейлир Пейдж-Джонс и Джим Вейрих</h4>
+      <p class="years">статья 1992; Вейрих 1956–2014</p>
+      <p>Пейдж-Джонс — консультант и автор книг сначала по структурному, затем по объектному проектированию; вместе с Константином разрабатывал нотацию для объектных систем.</p>
+      <p>Идея почти двадцать лет оставалась малоизвестной, пока её не вернул Вейрих — автор Rake и один из самых любимых докладчиков Ruby-сообщества.</p>
+      <p class="read"><b>Смотреть:</b> доклад Вейриха «Grand Unified Theory of Software Design»; справочник видов связи — на connascence.io.</p>
+    </aside>
+  </article>
+</section>
+
+<!-- ================= PART II ================= -->
+<section id="part-2">
+  <header class="part-head">
+    <span class="part-num">II</span>
+    <div><h2>Контракты</h2><p>Граница модуля — это договор. Три идеи о том, что в нём записано на самом деле и что соблюдается на практике.</p></div>
+  </header>
+
+  <article class="principle" id="liskov">
+    <div class="body">
+      <h3>Подстановка по поведению</h3>
+      <div class="byline">Барбара Лисков, 1987 <span class="sep"></span> <a class="ax" data-ax="A4" href="#ax-A4">А4</a></div>
+      <p>В докладе «Data Abstraction and Hierarchy» на конференции OOPSLA Лисков сформулировала требование к подтипам: объект подтипа должен подставляться везде, где ожидается базовый тип, не меняя поведения программы. Строгую формулировку дала работа Лисков и Джанетт Винг «A Behavioral Notion of Subtyping» (1994). Название «принцип подстановки Лисков» появилось позже, у Роберта Мартина.</p>
+      <p>Ключевое слово — поведение. Тайпчекер проверяет, что сигнатура совпадает, но не проверяет, что метод выполняет то же обещание. Подтип не может требовать от вызывающего больше, чем базовый тип (усиливать предусловия), не может гарантировать меньше (ослаблять постусловия) и обязан сохранять инварианты.</p>
+      <p>Проще всего это увидеть на инварианте. Инвариант — свойство объекта, которое верно всегда, в любой момент между вызовами его методов, какой бы метод ни вызвали последним.</p>
+<pre><code>class Account:
+    """Инвариант: balance >= 0."""
+    def withdraw(self, amount: int) -> None:
+        if amount > self.balance:
+            raise InsufficientFunds
+        self.balance -= amount
+
+class OverdraftAccount(Account):
+    def withdraw(self, amount: int) -> None:
+        self.balance -= amount    <span class="c"># разрешён уход в минус</span></code></pre>
+      <p>Инвариант <code>Account</code> — баланс никогда не бывает отрицательным. Метод <code>withdraw</code> его соблюдает: если денег не хватает, он бросает исключение и баланс не трогает. Код, который работает со счетами, может на это рассчитывать и не проверять баланс сам.</p>
+      <p><code>OverdraftAccount</code> этот инвариант нарушает: после <code>withdraw</code> баланс может стать отрицательным. При этом тайпчекер доволен — сигнатура та же, и объект подставляется везде, где ожидается <code>Account</code>. Сломается код, который рассчитывал на неотрицательный баланс, и сломается без ошибок: он просто начнёт считать неверно. Это и значит «сохранять инварианты»: <b>подтип вправе добавить свои правила, но не вправе отменить те, что обещал базовый тип</b>.</p>
+      <p><span class="lead">Признаки в коде.</span> Проверки <code>isinstance</code> в вызывающем коде ради особого подтипа. Методы-заглушки с <code>NotImplementedError</code>. Реализация бросает исключения, о которых контракт базового типа молчит.</p>
+      <p><span class="lead warn">Когда вредит.</span> Принцип не говорит, что наследование нужно. Часто лучший способ его соблюсти — вообще не строить иерархию. А строгость контракта зависит от числа потребителей: внутреннему коду с одним вызывающим хватает здравого смысла.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Барбара Лисков</h4>
+      <p class="years">род. 1939</p>
+      <p>Одна из первых женщин в США, получивших PhD в computer science (Стэнфорд, 1968). Создала язык CLU, где появились абстрактные типы данных в современном смысле, итераторы и механизм исключений, повлиявшие на Ada, C++, Python и Ruby.</p>
+      <p>Позже занималась распределёнными системами, включая византийскую отказоустойчивость. Лауреат премии Тьюринга 2008 года.</p>
+      <p class="read"><b>Читать:</b> «A Behavioral Notion of Subtyping» (с Джанетт Винг).</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="meyer">
+    <div class="body">
+      <h3>Проектирование по контракту</h3>
+      <div class="byline">Бертран Мейер, 1988 <span class="sep"></span> <a class="ax" data-ax="A4" href="#ax-A4">А4</a> <a class="ax" data-ax="A6" href="#ax-A6">А6</a></div>
+      <p>Мейер предложил видеть в каждом вызове договор между клиентом и поставщиком. Предусловие — обязанность клиента: вызывать метод можно, только когда оно выполнено. Постусловие — обязанность поставщика: при соблюдённом предусловии он гарантирует результат. Инвариант класса остаётся истинным между любыми вызовами. В языке Eiffel, который создал Мейер, контракты — часть синтаксиса и проверяются во время выполнения.</p>
+      <p>Самое практичное следствие — ясное распределение ответственности за проверки. Без контракта каждый уровень на всякий случай проверяет всё: одно значение валидируют в обработчике, в сервисе и в репозитории, и никто не знает, какая проверка настоящая. С контрактом проверка делается один раз, на границе, где данные входят в систему, а внутри действует гарантия. Современная форма той же мысли — формула Алексис Кинг «parse, don't validate»: не проверять строку на корректность, а превращать её в тип, само существование которого служит доказательством.</p>
+<pre><code>@dataclass(frozen=True)
+class Email:
+    value: str
+    def __post_init__(self):
+        if "@" not in self.value:
+            raise ValueError(f"not an email: {self.value!r}")
+
+def send_invite(to: Email) -> None:   <span class="c"># проверять здесь больше нечего</span>
+    ...</code></pre>
+      <p>Мейеру принадлежат ещё два известных принципа: разделение команд и запросов (метод либо меняет состояние, либо возвращает значение, но не то и другое) и принцип открытости-закрытости, который Мартин позже включил в SOLID.</p>
+      <p><span class="lead">Признаки в коде.</span> Одинаковые проверки на <code>None</code> и пустоту на каждом уровне стека. Функции, которые молча «чинят» некорректный ввод. Геттер, который что-то изменяет или пишет в базу.</p>
+      <p><span class="lead warn">Когда вредит.</span> Проверки в рантайме стоят времени, а контракты, записанные только в комментариях, устаревают. На горячих путях контракты обычно оставляют в типах, тестах и на внешних границах.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Бертран Мейер</h4>
+      <p class="years">род. 1950</p>
+      <p>Французский учёный, создатель языка Eiffel и автор «Object-Oriented Software Construction» (1988) — одной из самых основательных книг об объектном подходе. Ввёл термины «проектирование по контракту», «принцип открытости-закрытости» и «разделение команд и запросов».</p>
+      <p>Долгие годы руководил кафедрой программной инженерии в ETH Zurich.</p>
+      <p class="read"><b>Читать:</b> главы о контрактах в «Object-Oriented Software Construction».</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="hyrum">
+    <div class="body">
+      <h3>Закон Хайрама</h3>
+      <div class="byline">Хайрам Райт, Google, 2010-е <span class="sep"></span> <a class="ax" data-ax="A4" href="#ax-A4">А4</a> <a class="ax" data-ax="A1" href="#ax-A1">А1</a></div>
+      <p>Суть закона: когда у API достаточно пользователей, неважно, что обещано в контракте, — на любое наблюдаемое поведение системы кто-нибудь да будет опираться. Райт вывел это из многолетней работы над масштабными изменениями кодовой базы Google: даже правки, которые по контракту никого не должны были задеть, где-то что-то ломали.</p>
+      <p>Это отрезвляющее дополнение к Парнасу и Мейеру. Сокрытие и контракты описывают, от чего клиент <em>должен</em> зависеть. Закон Хайрама описывает, от чего он будет зависеть на самом деле: от порядка элементов, текста сообщений об ошибках, времени ответа, форматирования чисел.</p>
+      <p>Пример противоядия — защитная рандомизация. Когда обновление Java изменило порядок обхода хэш-таблиц и сломало множество тестов, которые на этот неопределённый порядок полагались, в Google изменили свою сборку JDK так, чтобы порядок менялся от запуска к запуску. Полагаться на него стало невозможно. В Python хэши строк рандомизируются по умолчанию с версии 3.3 — ради безопасности, но с тем же побочным эффектом. Обратный пример тоже из Python: порядок ключей в словаре, появившийся в CPython 3.6 как деталь реализации, в 3.7 объявили гарантией языка.</p>
+      <p><span class="lead">Признаки в коде.</span> Клиенты парсят текст ошибок. Тесты сравнивают сериализованный JSON целиком, вместе с порядком ключей. Про внутренний сервис говорят «им пользуемся только мы», пока попытка поменять формат ответа не доказывает обратное.</p>
+      <p><span class="lead">Практика.</span> Сокращай наблюдаемую поверхность: не отдавай лишних полей, возвращай неизменяемые копии. Делай неуточнённое поведение намеренно непредсказуемым. Меняй контракт через версионирование, а не молча. И закладывай в оценку, что изменение публичного поведения — это миграция, а не правка.</p>
+      <p><span class="lead warn">Когда вредит.</span> Закон описывает масштаб. В модуле с двумя известными вызывающими проще поправить оба вызова, чем строить защиту.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Хайрам Райт</h4>
+      <p class="years">Google 2012–2024, сейчас Adobe</p>
+      <p>Много лет занимался в Google здоровьем кодовой базы и крупномасштабными автоматическими рефакторингами. Один из редакторов «Software Engineering at Google» (2020).</p>
+      <p>Сам он скромно называл наблюдение законом неявных зависимостей; имя «закон Хайрама» дали коллеги. Лучшая иллюстрация — комикс xkcd «Workflow» о пользователе, чей рабочий процесс сломало исправление перегрева процессора при зажатом пробеле.</p>
+      <p class="read"><b>Читать:</b> первая глава «Software Engineering at Google» и hyrumslaw.com.</p>
+    </aside>
+  </article>
+</section>
+
+<!-- ================= PART III ================= -->
+<section id="part-3">
+  <header class="part-head">
+    <span class="part-num">III</span>
+    <div><h2>Сложность</h2><p>Зацепление объясняет, почему изменения дорожают. Сложность объясняет, почему они становятся опасными. Часть отвечает на один вопрос: сложность уже есть — откуда она взялась и что с ней делать. Брукс даёт различение, Хикки называет главный источник той сложности, которую мы наживаем сами, Остерхаут говорит, что делать с той, которую убрать нельзя.</p></div>
+  </header>
+
+  <article class="principle" id="brooks">
+    <div class="body">
+      <h3>Существенная и случайная сложность</h3>
+      <div class="byline">Фред Брукс, 1986 <span class="sep"></span> <a class="ax f" data-ax="F2" href="#ax-F2">Ф2</a> <a class="ax" data-ax="A5" href="#ax-A5">А5</a></div>
+      <p>В эссе «No Silver Bullet» Брукс, опираясь на Аристотеля, разделил трудности разработки на два рода. Существенная (<span class="term">essential</span>) сложность принадлежит самой задаче: предметная область запутана, подчиняется произвольным внешним правилам, постоянно меняется и невидима — у программы нет геометрии, которую можно окинуть взглядом. Случайная (<span class="term">accidental</span>) привнесена нашими же решениями: ручное управление памятью, долгая сборка, конфигурация, лишние слои. Первую можно только честно смоделировать, вторую — убрать.</p>
+      <p>Ради этого различения эссе и написано: ни один отдельный инструмент не даст десятикратного роста продуктивности, потому что бо́льшую часть случайной сложности к 1986 году уже сняли, а существенную снять нельзя. Мысль стоит держать в голове сейчас, когда ассистенты резко удешевили набор кода: набор текста никогда не был узким местом. В 2006 году Бен Мозли и Питер Маркс в статье «Out of the Tar Pit» оспорили пропорцию: по их мнению, в реальных системах случайного всё-таки больше, а главный его источник — изменяемое состояние. Это прямой мост к следующему разделу.</p>
+      <p><span class="lead">Практика.</span> Вся ценность различения — в вопросе, который оно позволяет задать вслух на ревью: эта сложность от задачи или от нашего решения? Существенную моделируй явно и держи вместе, случайную прячь в инфраструктуру или удаляй. Ответ «от решения» почти всегда означает, что работа есть и она выполнима.</p>
+      <p><span class="lead">Признаки в коде.</span> Фреймворк, очереди и конфигурацию команда обсуждает дольше, чем правила предметной области. У бизнес-правил нет своего места в коде, они размазаны по обработчикам. Чтобы поменять условие скидки, нужно знать про транзакции и ретраи.</p>
+      <p><span class="lead warn">Когда вредит.</span> Граница условна и зависит от задачи: задержка сети случайна для интернет-магазина и существенна для биржевого робота. Ярлык «случайная» — не разрешение отмахнуться, а обещание убрать.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Фред Брукс</h4>
+      <p class="years">1931–2022</p>
+      <p>Руководил в IBM разработкой семейства System/360 и операционной системы OS/360 — одного из крупнейших программных проектов своего времени. Опыт лёг в «Мифический человеко-месяц» (1975), откуда пошли закон Брукса и эффект второй системы.</p>
+      <p>Основал факультет computer science в Университете Северной Каролины, лауреат премии Тьюринга 1999 года.</p>
+      <p class="read"><b>Читать:</b> «No Silver Bullet» — вошло в юбилейное издание «Мифического человеко-месяца».</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="hickey">
+    <div class="body">
+      <h3>Переплетение</h3>
+      <div class="byline">Рич Хикки, 2011 <span class="sep"></span> <a class="ax" data-ax="A6" href="#ax-A6">А6</a> <a class="ax" data-ax="A2" href="#ax-A2">А2</a></div>
+      <p>Главное слово доклада Рича Хикки «Simple Made Easy», прочитанного в 2011 году на конференции Strange Loop, — <span class="term">complect</span>, старое английское «сплетать», которое Хикки вытащил из забвения. Сложная система — та, где независимые по смыслу вещи сплетены так, что думать о них по отдельности нельзя. Определение работает потому, что называет не ощущение, а конкретные механизмы сплетения. Главный из них — изменяемый объект.</p>
+      <p>Хикки различает три вещи, которые в обычном коде живут вместе. <b>Значение</b> не меняется никогда: число <code>42</code> или набор «хлеб, молоко». <b>Идентичность</b> — то, о чём мы говорим во времени: «корзина пользователя 17» остаётся той же корзиной, хотя её содержимое меняется. <b>Состояние</b> — какое значение у идентичности сейчас. Изменяемый объект склеивает все три: переменная <code>cart</code> — одновременно и «та самая корзина», и её текущее содержимое. Отдельно взять «корзину, какой она была минуту назад», нельзя: её перезапишут у тебя под руками. Вопрос «сколько товаров в корзине» перестаёт иметь ответ и превращается в вопрос «когда именно ты спросил».</p>
+<pre><code><span class="c"># Переплетено: snapshot — не снимок, а та же самая корзина</span>
+snapshot = cart
+cart.add("молоко")
+snapshot.items          <span class="c"># молоко есть и здесь</span>
+
+<span class="c"># Раздельно: каждое изменение даёт новое значение</span>
+@dataclass(frozen=True)          <span class="c"># поля нельзя менять после создания</span>
+class Cart:
+    items: tuple[str, ...] = ()  <span class="c"># кортеж строк любой длины</span>
+
+    <span class="c"># "Cart" в кавычках: пока читается тело класса, его ещё нет</span>
+    def with_item(self, item: str) -> "Cart":
+        <span class="c"># новый кортеж, старый не тронут;</span>
+        <span class="c"># запятая обязательна: (item,) — кортеж, (item) — просто item</span>
+        return Cart(self.items + (item,))
+
+snapshot = cart
+cart = cart.with_item("молоко")  <span class="c"># имя cart теперь указывает на новое значение</span>
+snapshot.items                   <span class="c"># молока нет: снимок остался снимком</span></code></pre>
+      <p>Во втором варианте три вещи разведены: каждый объект <code>Cart</code> — значение, имя <code>cart</code> — идентичность, а состояние — то, на какое значение имя указывает сейчас. Тот, кто сохранил себе <code>snapshot</code>, получил именно значение, и никто его не изменит.</p>
+      <p>Те же сплетения встречаются и в других местах. Наследование сплетает типы: подкласс нельзя понять, не прочитав родителя, а правка в родителе меняет поведение всех наследников. Флаг в аргументе сплетает два поведения в одну функцию: <code>save(user, notify=True)</code> — это на самом деле две функции, у которых общие только имя и часть кода.</p>
+      <p>Распутывание всегда одно и то же движение: неизменяемые значения вместо изменяемого состояния, чистые функции вместо методов «умных» объектов, данные вместо объектов, очередь вместо прямого вызова. Отсюда же различение, давшее докладу название. Простое (<span class="term">simple</span>) — объективное свойство: одна роль, ни с чем не сплетённая. Лёгкое (<span class="term">easy</span>) — субъективное: близкое, знакомое, привычное лично тебе. Знакомый фреймворк бывает лёгким и сложным одновременно, а незнакомая идея — простой, но поначалу трудной. Индустрия, по Хикки, оптимизирует лёгкость написания, а расплачивается сложностью сопровождения.</p>
+      <p><span class="lead">Признаки в коде.</span> Баг воспроизводится только при определённом порядке запросов. Тест проходит в одиночку и падает в наборе. Чтобы понять значение поля, нужно знать, какие методы вызывались до этого.</p>
+      <p><span class="lead warn">Когда вредит.</span> Неизменяемость в горячих циклах стоит памяти и времени, а в Python нет персистентных структур данных из коробки. Разумный компромисс — изменяемость внутри функции и неизменяемые значения на её границах.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Рич Хикки</h4>
+      <p class="years">Clojure, 2007</p>
+      <p>Создатель языка Clojure и базы данных Datomic, в которой ничто не перезаписывается: данные накапливаются как неизменяемые факты во времени. Около двух лет писал Clojure на собственные сбережения, без финансирования.</p>
+      <p>Его доклады — «Simple Made Easy», «The Value of Values», «Hammock Driven Development» — давно смотрят далеко за пределами Clojure-сообщества.</p>
+      <p class="read"><b>Смотреть и читать:</b> «Simple Made Easy», затем «Out of the Tar Pit» Мозли и Маркса.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="ousterhout">
+    <div class="body">
+      <h3>Глубокие модули</h3>
+      <div class="byline">Джон Остерхаут, 2018 <span class="sep"></span> <a class="ax" data-ax="A5" href="#ax-A5">А5</a> <a class="ax" data-ax="A1" href="#ax-A1">А1</a></div>
+      <p>Остерхаут называет сложностью всё, что затрудняет понимание и изменение системы, и выделяет три симптома: одно изменение требует правок во многих местах, для работы нужно много держать в голове, и неочевидно, что вообще надо менять. Главное средство против неё — глубокие модули: интерфейс сильно проще реализации, модуль берёт на себя больше, чем требует знать от пользователя. Эталон — файловый ввод-вывод Unix, где пять системных вызовов прячут каталоги, права, кэширование, размещение на диске и конкурентный доступ.</p>
+      <p>Противоположность — мелкий модуль, чей интерфейс почти так же сложен, как реализация. Увлечение ими Остерхаут называет <span class="term">classitis</span>: множество крошечных классов и методов, каждый из которых прост, но система сложна, потому что сложность переехала в связи между ними. Отсюда его спор с Робертом Мартином, выложенный на GitHub длинным диалогом: Мартин советует дробить функции до нескольких строк, Остерхаут считает, что за определённым пределом дробление ухудшает понимание.</p>
+<pre><code><span class="c"># Мелко: каждый слой только передаёт вызов дальше</span>
+class UserService:
+    def get_user(self, user_id):
+        return self.repo.get_user(user_id)
+
+class UserRepository:
+    def get_user(self, user_id):
+        return self.dao.fetch_user(user_id)</code></pre>
+      <p>Другие практичные идеи книги. Утаскивай сложность вниз: пусть страдает автор модуля, а не все его пользователи. Определяй ошибки так, чтобы их не было: удаление несуществующего ключа можно считать успехом, а не исключением. Проектируй дважды: прежде чем выбрать дизайн, набросай хотя бы одну альтернативу. И отличай тактическое программирование, которое закрывает задачу, от стратегического, которое заодно улучшает систему.</p>
+      <p><span class="lead">Признаки в коде.</span> Методы, которые только передают вызов дальше. Обёртка над библиотекой, повторяющая её API один в один. Чтобы сделать простое действие, нужно создать три объекта в правильном порядке. Параметры конфигурации, которые модуль мог бы выбрать сам.</p>
+      <p><span class="lead warn">Когда вредит.</span> Глубина — это отношение, а не размер, и она не оправдывает гигантских модулей с запутанными внутренностями. Маленькие функции тоже хороши, когда у каждой есть самостоятельный смысл.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Джон Остерхаут</h4>
+      <p class="years">Стэнфорд</p>
+      <p>Создатель языка Tcl и библиотеки Tk (на ней построен питоновский Tkinter), соавтор лог-структурированной файловой системы и алгоритма консенсуса Raft, придуманного вместе с Диего Онгаро.</p>
+      <p>Книга выросла из его стэнфордского курса по проектированию ПО, где студенты пишут крупные проекты и получают подробные разборы кода.</p>
+      <p class="read"><b>Читать:</b> «A Philosophy of Software Design» (второе издание) и репозиторий aposd-vs-clean-code на GitHub.</p>
+    </aside>
+  </article>
+</section>
+
+<!-- ================= PART IV ================= -->
+<section id="part-4">
+  <header class="part-head">
+    <span class="part-num">IV</span>
+    <div><h2>Структура</h2><p>Когда границы проведены, остаётся решить, какие стрелки между ними разрешены. И обнаружить, что рисуют их не только инженеры.</p></div>
+  </header>
+
+  <article class="principle" id="martin">
+    <div class="body">
+      <h3>Инверсия и стабильные зависимости</h3>
+      <div class="byline">Роберт Мартин, 1990-е <span class="sep"></span> <a class="ax" data-ax="A3" href="#ax-A3">А3</a></div>
+      <p class="note">Этот раздел намного длиннее остальных — примерно в двадцать раз. Кроме самого принципа, в нём разобраны стабильные зависимости, DI-контейнеры, выбор между протоколом и абстрактным классом и то, как всё это сказывается на тестах. Если нужна только суть, хватит текста до схемы с двумя стрелками.</p>
+      <p>Мартин собрал набор принципов в статьях 1990-х и в работе «Design Principles and Design Patterns» (2000); аббревиатуру SOLID из первых букв пяти из них составил Майкл Физерс около 2004 года. Самый глубокий из пяти — инверсия зависимостей: модули верхнего уровня не зависят от модулей нижнего, и те и другие зависят от абстракций, а абстракции не зависят от деталей.</p>
+      <p>Слово «инверсия» ничего не значит без версии «до». Вот прямая зависимость: сервис сам добывает себе репозиторий.</p>
+<pre><code>class PostgresUserRepository:
+    def get_by_id(self, user_id: int) -> dict:
+        return {"id": user_id, "name": "Alice"}
+
+class UserService:
+    def __init__(self) -> None:
+        <span class="c"># имя конкретного класса зашито прямо здесь</span>
+        self.repository = PostgresUserRepository()
+
+    def get_user_name(self, user_id: int) -> str:
+        return self.repository.get_by_id(user_id)["name"]</code></pre>
+      <p>Тут две разные стрелки, и их обычно путают. Первая — направление вызова: сервис зовёт репозиторий. Вторая — направление зависимости: чтобы собрать <code>UserService</code>, нужен <code>PostgresUserRepository</code>, то есть имя, импорт, драйвер базы. Пока сервис создаёт зависимость внутри себя, обе стрелки смотрят в одну сторону, и правило предметной области намертво привязано к PostgreSQL: ни подменить хранилище, ни подставить фейк в тесте.</p>
+      <p>Разворот держится на одной конструкции языка, и без неё дальше читать бесполезно. <code>Protocol</code> из модуля <code>typing</code> — это список требований к объекту: какие методы он обязан иметь, с какими аргументами и каким типом результата. Ни одной исполняемой строки внутри нет, тела методов заменены многоточием. Это не базовый класс и не интерфейс в духе Java: ничего не наследуется и не вызывается, это письменное условие «объект годится сюда, если умеет вот это». Соблюдение условия проверяет тайпчекер — <code>mypy</code> или <code>pyright</code>, — когда читает код; во время работы программы протокол не участвует ни в чём.</p>
+      <p>Понадобятся ещё два слова, дальше они будут встречаться постоянно. <b>Домен</b> — код, выражающий правила предметной области: кто такой пользователь, когда положена скидка, какой заказ считается оплаченным. <b>Инфраструктура</b> — код, разговаривающий с внешним миром: драйвер базы, HTTP-клиент платёжного провайдера, отправка писем. В примере ниже домен — это <code>users/service.py</code>, инфраструктура — <code>infra/postgres.py</code>. Разворот выглядит так.</p>
+<pre><code><span class="c"># users/service.py — домен.
+# Протокол пишет тот, кто будет им пользоваться</span>
+class UserRepo(Protocol):
+    <span class="c"># требование, а не реализация</span>
+    def get_by_id(self, user_id: int) -> dict: ...
+
+class UserService:
+    <span class="c"># зависимость приходит снаружи</span>
+    def __init__(self, repo: UserRepo) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        return self.repository.get_by_id(user_id)["name"]
+
+<span class="c"># infra/postgres.py — инфраструктура.
+# Она обязана совпасть с требованием домена</span>
+from users.service import UserRepo   <span class="c"># импорт смотрит вверх, в домен</span>
+
+class PostgresUserRepository(UserRepo):
+    def get_by_id(self, user_id: int) -> dict: ...
+
+<span class="c"># main.py — единственное место,
+# где домен встречается с инфраструктурой</span>
+service = UserService(PostgresUserRepository())</code></pre>
+      <p>Теперь формулу из первого абзаца можно разложить по именам. Модуль верхнего уровня — <code>UserService</code>, он про правила. Модуль нижнего уровня — <code>PostgresUserRepository</code>, он про механику хранения. Абстракция — <code>UserRepo</code>. Верхний не зависит от нижнего: слова <code>Postgres</code> в <code>service.py</code> больше нет нигде. Нижний зависит от абстракции: он её импортирует и обязан ей соответствовать. Последняя часть формулы, «абстракция не зависит от деталей», проверяется буквально глазами: в тексте <code>UserRepo</code> нет ни SQL, ни соединения, ни таблицы <code>users</code>, ни слова <code>Postgres</code>. Перепишите репозиторий на MongoDB или на словарь в памяти — в протоколе не изменится ни символа. А вот если бы там стояло <code>def fetch_row(self, table: str, pk: int) -> Row</code>, абстракция зависела бы от детали: <code>table</code> и <code>Row</code> — понятия реляционной базы, и словарём в памяти такое уже не подменишь.</p>
+      <p>Вот здесь и находится инверсия. Чтобы её увидеть, надо развести две стрелки, которые в голове обычно склеены в одну.</p>
+<figure class="fig">
+<svg viewBox="0 0 660 356" role="img" aria-label="Схема: направление вызова и направление зависимости до и после инверсии">
+  <defs>
+    <marker id="mk-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-dim" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="mk-key" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-key" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+
+  <text class="cap" x="20" y="16">ДО</text>
+  <rect class="mod" x="20" y="28" width="250" height="84" rx="4"/>
+  <text class="file" x="32" y="46">users/service.py</text>
+  <rect class="cls" x="32" y="54" width="226" height="44" rx="3"/>
+  <text class="name" x="145" y="81">UserService</text>
+  <rect class="mod" x="390" y="28" width="250" height="84" rx="4"/>
+  <text class="file" x="402" y="46">infra/postgres.py</text>
+  <rect class="cls" x="402" y="54" width="226" height="44" rx="3"/>
+  <text class="name" x="515" y="81">PostgresUserRepository</text>
+  <path class="arr" d="M276,62 H384" marker-end="url(#mk-dim)"/>
+  <text class="lbl" x="330" y="54">вызов</text>
+  <path class="arr key" d="M276,94 H384" marker-end="url(#mk-key)"/>
+  <text class="lbl key" x="330" y="86">зависимость</text>
+
+  <text class="cap" x="20" y="186">ПОСЛЕ</text>
+  <rect class="mod" x="20" y="198" width="250" height="140" rx="4"/>
+  <text class="file" x="32" y="216">users/service.py</text>
+  <rect class="cls" x="32" y="224" width="226" height="44" rx="3"/>
+  <text class="name" x="145" y="251">UserService</text>
+  <rect class="cls proto" x="32" y="280" width="226" height="44" rx="3"/>
+  <text class="name" x="145" y="307">UserRepo (Protocol)</text>
+  <rect class="mod" x="390" y="198" width="250" height="84" rx="4"/>
+  <text class="file" x="402" y="216">infra/postgres.py</text>
+  <rect class="cls" x="402" y="224" width="226" height="44" rx="3"/>
+  <text class="name" x="515" y="251">PostgresUserRepository</text>
+  <path class="arr" d="M276,246 H384" marker-end="url(#mk-dim)"/>
+  <text class="lbl" x="330" y="238">вызов</text>
+  <path class="arr key" d="M515,268 V302 H264" marker-end="url(#mk-key)"/>
+  <text class="lbl key" x="380" y="294">зависимость</text>
+</svg>
+</figure>
+      <p class="fig-cap">Серая стрелка — кто кого дёргает, когда программа работает. Синяя — кто под кого подстроен. Переворачивается только синяя: после инверсии она идёт от <code>PostgresUserRepository</code> к <code>UserRepo</code> и читается как «реализация обязана соответствовать протоколу». Заканчивается она внутри домена, потому что протокол лежит там.</p>
+      <p><b>Стрелка вызова</b> — кто кого дёргает во время работы. Она смотрит от <code>UserService</code> к <code>PostgresUserRepository</code> в обеих версиях и не меняется никогда: сервису нужны данные из базы, взять их больше неоткуда. <b>Стрелка зависимости</b> идёт от того, кто подстраивается, к тому, под кого подстраиваются, и определяется она вопросом о ремонте: если <code>PostgresUserRepository</code> завтра переименует метод, чей файл придётся открыть — его собственный или <code>service.py</code>? Это не то же самое, что «вызывает» или «импортирует», и путаница обычно именно здесь. В версии «до» ответ — <code>service.py</code>: имя <code>PostgresUserRepository</code> зашито в его конструкторе, и без установленного драйвера базы модуль сервиса даже не импортируется. Значит, в версии «до» обе стрелки смотрят в одну сторону, а смена хранилища становится правкой в домене.</p>
+      <p>В версии «после» <code>service.py</code> не упоминает PostgreSQL вообще. Требования к методу формулирует <code>UserRepo</code>, а пишет <code>UserRepo</code> сервис — под свои нужды и своими словами. <code>PostgresUserRepository</code> — конкретный класс, который ходит в базу, — теперь обязан иметь метод с именем <code>get_by_id</code>, принимать <code>user_id: int</code> и возвращать словарь, хотя его собственная природа подсказывала бы что-нибудь вроде <code>fetch_one(sql, params) -> Row</code>.</p>
+      <p>Между тем, как удобно домену, и тем, как устроен драйвер, всегда есть зазор, и кто-то обязан написать код, который его закрывает: собрать SQL из <code>user_id</code>, выполнить запрос, превратить строку курсора в словарь, решить, что делать с пустым результатом. Вот эти несколько строк и есть перевод с языка базы на язык предметной области. Никуда они не денутся, вопрос только в том, в чьём файле лежат. Если бы форму метода диктовал драйвер, переводом занимался бы сервис: складывал SQL и разбирал курсор вперемешку с бизнес-правилами. Раз форму диктует домен, перевод целиком переехал внутрь <code>PostgresUserRepository</code> — то есть платит за него инфраструктура. Инверсия — это расхождение двух направлений: вызов идёт вниз, зависимость вверх.</p>
+      <p>Почему это называется зависимостью, хотя во время работы программы <code>PostgresUserRepository</code> протокол не вызывает ни разу — <code>UserRepo</code> вообще не исполняется, — видно из пробы на удаление. Выкинь репозиторий — <code>UserService</code> вместе с <code>UserRepo</code> остаются осмысленной и тестируемой системой: подставь фейк на словаре, и бизнес-логика крутится. Выкинь протокол — и репозиторий превращается в класс, у которого нет причины иметь именно такую форму. Он существует ради соответствия, и без того, чему он соответствует, ничем не обоснован. Проверка работает и в другую сторону: добавили в протокол <code>get_by_email</code> — репозиторий сломался; переписали внутри него SQL или сменили драйвер — протокол этого не заметил. Одностороннее «ломается от» и есть зависимость.</p>
+      <p><span class="lead">Проверка на «кто кого чинит».</span> Направление зависимости быстрее всего определяется не чтением импортов, а одним вопросом: если изменится вот этот модуль, чей файл придётся открыть и править. Прогоним по нему два конкретных изменения. Первое: сервису понадобился поиск по почте. В версии «после» строчку <code>get_by_email</code> дописывают в <code>UserRepo</code>, а метод — в <code>infra/postgres.py</code>; домен попросил, деталь подстроилась, правка пришла туда, куда надо. Второе: компания переезжает с PostgreSQL на MongoDB. В версии «после» пишут новый класс <code>MongoUserRepository</code> и меняют одну строку в <code>main.py</code>, а <code>service.py</code> не открывают вовсе. В версии «до» тот же переезд — это правка внутри <code>UserService</code>, потому что имя <code>PostgresUserRepository</code> зашито в его конструкторе: чужая база, чужой драйвер, а руки лезут в бизнес-логику. Вот эта разница и есть инверсия; <code>import</code>, наследование и аргумент конструктора — лишь способы записать её в синтаксисе.</p>
+      <p>Одна оговорка про Python. Строка <code>class PostgresUserRepository(UserRepo)</code> в примере стоит ради наглядности: <code>Protocol</code> работает структурно, и классу достаточно просто иметь нужные методы — ни импорта, ни наследования язык не требует, совпадение проверит тайпчекер в точке сборки, в <code>main.py</code>. То есть код без этих двух строк тоже правильный, и стрелка зависимости никуда не девается: она выражена обязательством, а не словом <code>import</code>. Писать явно всё же стоит, и по двум причинам: ошибку несоответствия тайпчекер покажет в файле репозитория, а не в <code>main.py</code>, и зависимость становится видна глазами — её найдёт любой grep по импортам. В языках с настоящими интерфейсами, вроде Java или C#, выбора нет: там инфраструктура импортирует домен всегда.</p>
+      <p>Протокол — не единственный способ записать абстракцию в Python. Второй способ — абстрактный класс: наследник <code>ABC</code> из модуля <code>abc</code>, в котором обязательные методы помечены декоратором <code>@abstractmethod</code>. Для инверсии разницы между ними нет. Принцип требует, чтобы абстракция принадлежала домену, лежала в его пакете и была сформулирована в его словах, а записать её можно любым из двух способов. Вот один и тот же <code>UserRepo</code>, записанный обоими способами.</p>
+<p class="code-tag">Протокол</p>
+<pre><code><span class="c"># users/service.py</span>
+from typing import Protocol
+
+class UserRepo(Protocol):
+    def get_by_id(self, user_id: int) -> dict: ...
+
+<span class="c"># infra/postgres.py — наследовать не обязательно</span>
+class PostgresUserRepository:
+    def get_by_id(self, user_id: int) -> dict: ...</code></pre>
+<p class="code-tag">Абстрактный класс</p>
+<pre><code><span class="c"># users/service.py</span>
+from abc import ABC, abstractmethod
+
+class UserRepo(ABC):
+    @abstractmethod
+    def get_by_id(self, user_id: int) -> dict: ...
+
+<span class="c"># infra/postgres.py — наследовать обязательно</span>
+from users.service import UserRepo
+
+class PostgresUserRepository(UserRepo):
+    def get_by_id(self, user_id: int) -> dict: ...</code></pre>
+      <p>Главное отличие — кто проверяет, что реализация соответствует абстракции. Протокол проверяет только тайпчекер — <code>mypy</code>, <code>pyright</code> или <code>ty</code>. Абстрактный класс проверяет сам Python во время работы: если наследник не реализовал хотя бы один абстрактный метод, объект не создастся, и вызов <code>PostgresUserRepository()</code> упадёт с <code>TypeError</code>. Для этого не нужны ни тайпчекер, ни настройки редактора.</p>
+      <p>У абстрактного класса есть и другие плюсы. Связь видна явно: реализация обязана унаследовать абстракцию, а значит, импортировать домен. С протоколом это приходилось рекомендовать отдельно, в абзаце выше. Кроме того, в абстрактный класс можно положить общий код — метод по умолчанию или докстринг с контрактом, который получат все реализации. У протокола свои преимущества. Под него подходит класс, который ты не контролируешь: класс из SDK или чужой библиотеки не заставишь унаследовать твой абстрактный класс, а под протокол ему достаточно подойти по форме. Фейки для тестов получаются легче — три строки без наследования и без импорта домена. И абстракция остаётся чистым списком требований, без соблазна складывать в неё реализацию.</p>
+      <p>Одна оговорка, чтобы не переоценить абстрактный класс. Во время работы Python проверяет только, что методы есть, но не их сигнатуры. Реализация с <code>def get_by_id(self)</code>, без <code>user_id</code>, создастся без ошибок, и поймает её опять же только тайпчекер.</p>
+      <p>Отсюда практическое правило выбора. Если тайпчекер запускается в CI и не пропускает merge с ошибкой, протокол надёжен и удобнее. Если такого барьера нет, протокол превращается в документацию. Подсветка ошибок в редакторе этот барьер не заменяет: она включена не у всех, проверяет только открытые файлы и ничего не блокирует. В таком проекте надёжнее абстрактный класс — забытый метод уронит тест в любом окружении. Абстрактный класс уместен и тогда, когда все реализации ваши собственные и им нужен общий код. Протокол — когда подстраивать приходится чужие классы.</p>
+      <p>Протоколом или абстрактным классом — способ записи на направление стрелки не влияет: после разворота инфраструктура подстраивается под домен, а не наоборот. Осталось объяснить, почему разворачивать нужно именно в эту сторону, а не в любую. Ответ даёт менее известный принцип того же Мартина — принцип стабильных зависимостей: зависеть следует в направлении стабильности.</p>
+      <p>Стабильность здесь не про характер модуля, не про качество кода и даже не про то, что он «работает без сбоев». Это арифметика двух чисел. Входящие стрелки — сколько модулей сломается, если этот изменить. Исходящие — сколько модулей могут сломать его самого. Стабилен тот, у кого входящих много, а исходящих мало: менять его дорого, потому что каждую правку чинят в десяти местах, и от этой дороговизны он фактически обездвижен. Нестабилен тот, у кого входящих нет совсем: его можно переписать целиком, и никто за пределами файла этого не заметит.</p>
+      <p>Дальше идёт утверждение, ради которого вся арифметика и затевалась. Зависимость — это обещание, причём выданное не человеку, а модулю. Написав в <code>infra/postgres.py</code> строчку <code>from users.service import UserRepo</code>, репозиторий пообещал: «когда изменится <code>UserRepo</code>, чинить будут меня». Обещание одностороннее — в обратную сторону оно не действует, протокол репозиторию ничего не должен — и бессрочное: снять его можно, только убрав зависимость. Отсюда единственное правило раздачи таких обещаний. Давать их стоит тому, кто меняться не собирается: он и так стоит на месте, значит, платить по обещанию почти не придётся. Дать его изменчивому — подписаться на ремонт по чужому расписанию.</p>
+      <p>Посчитаем на нашем примере, добавив к нему два соседних модуля, без которых он в жизни не встречается: <code>api/routes.py</code>, откуда сервис зовут ручки, и пакет <code>psycopg</code>, через который репозиторий ходит в базу. <code>UserRepo</code> — четыре строки без единого импорта: исходящих ноль, зависеть ему не от чего, входящих две — сервис и репозиторий. Он самый стабильный и меняется реже всех, только когда домен попросит новую операцию. <code>PostgresUserRepository</code> — полная противоположность: две исходящие, на протокол и на драйвер, и ни одной входящей. Вот это и означает «меняется дёшево»: выкинули класс, написали <code>MongoUserRepository</code>, поправили строку сборки — и всё, открывать больше нечего. <code>UserService</code> посередине, по одной стрелке в каждую сторону. Нестабильность растёт по мере движения наружу, к внешнему миру, — ровно так и задумано.</p>
+<figure class="fig">
+<svg viewBox="0 0 660 348" role="img" aria-label="Схема: стабильность модулей как отношение входящих и исходящих зависимостей">
+  <defs>
+    <marker id="mk-key2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="mk-key" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+
+  <rect class="cls proto" x="200" y="30" width="260" height="72" rx="3"/>
+  <text class="name" x="330" y="54">UserRepo (Protocol)</text>
+  <text class="lbl" x="330" y="73">входящих 2 · исходящих 0</text>
+  <text class="lbl verdict" x="330" y="92">менять дорого — чинить в двух местах</text>
+
+  <path class="arr key" d="M130,170 V134 H300 V104" marker-end="url(#mk-key2)"/>
+  <path class="arr key" d="M505,170 V134 H360 V104" marker-end="url(#mk-key2)"/>
+  <text class="lbl key" x="190" y="128">зависимость</text>
+  <text class="lbl key" x="450" y="128">зависимость</text>
+
+  <rect class="cls" x="20" y="170" width="220" height="72" rx="3"/>
+  <text class="name" x="130" y="194">UserService</text>
+  <text class="lbl" x="130" y="213">входящих 1 · исходящих 1</text>
+  <text class="lbl verdict" x="130" y="232">менять умеренно — чинить в одном</text>
+
+  <rect class="cls" x="380" y="170" width="250" height="72" rx="3"/>
+  <text class="name" x="505" y="194">PostgresUserRepository</text>
+  <text class="lbl" x="505" y="213">входящих 0 · исходящих 2</text>
+  <text class="lbl verdict" x="505" y="232">менять дёшево — чинить негде</text>
+
+  <path class="arr key" d="M130,288 V246" marker-end="url(#mk-key2)"/>
+  <rect class="mod" x="30" y="288" width="200" height="36" rx="4"/>
+  <text class="name" x="130" y="311">api/routes.py</text>
+  <text class="lbl verdict" x="130" y="341">менять дёшево — от него не зависит никто</text>
+
+  <path class="arr key" d="M505,242 V284" marker-end="url(#mk-key2)"/>
+  <rect class="mod" x="405" y="288" width="200" height="36" rx="4"/>
+  <text class="name" x="505" y="311">psycopg (драйвер)</text>
+  <text class="lbl verdict" x="505" y="341">менять не нам — чужой код</text>
+</svg>
+</figure>
+      <p class="fig-cap">Считаются только стрелки зависимости, и каждая нарисована. Пунктиром — два соседа, которых в коде выше не было: модуль HTTP-ручек и драйвер базы. <code>main.py</code> в счёт не идёт: точка сборки по определению знает всех и потому ничего не говорит о стабильности. Цена правки — прямое следствие числа входящих: у <code>UserRepo</code> их две, и обе придётся чинить; у <code>PostgresUserRepository</code> ни одной, его можно переписать целиком. <code>psycopg</code> — особый случай: входящих у него по всему миру столько, что меняем его не мы, а он нас, и потому зависеть от него напрямую домен не должен.</p>
+      <p>Дальше остаётся посмотреть, кто в паре меняется по чужим причинам. Правила предметной области меняются медленно и по внутренним причинам: их меняет бизнес, когда сам так решит. PostgreSQL, SDK платёжного провайдера и мажорная версия фреймворка меняются быстро и по причинам, к твоему бизнесу отношения не имеющим, — их меняют люди, которые про него ничего не знают. Поэтому направление стрелки не вопрос вкуса: если домен зависит от драйвера базы, то правило начисления скидки придётся чинить при чужом релизе. Вопрос для любых двух модулей звучит так: кто из вас меняется по чужим причинам? Тот и есть зависимая сторона — это ему полагается импортировать протокол и подстраиваться, а не наоборот (А3).</p>
+      <p>Отсюда видно, где проходит граница между приёмом и принципом. Передать готовый объект в конструктор, а не создавать его внутри, — это внедрение зависимости (<span class="term">dependency injection</span>), техника сборки. Инверсия — вопрос о другом: кому принадлежит абстракция и в чьих терминах она написана. Внедрение без инверсии встречается сплошь и рядом, и чаще всего — в проектах с DI-контейнером.</p>
+      <p>DI-контейнер — библиотека, которая берёт на себя сборку объектов: создаёт их и передаёт каждому его зависимости. В примере выше сборкой занимался <code>main.py</code>, и это была одна строка: <code>UserService(PostgresUserRepository())</code>. В настоящем приложении таких строк сотни, и их выносят в контейнер: один раз описываешь, что чем создаётся, а дальше библиотека сама приносит готовые объекты туда, где они нужны. Вот как это выглядит на наших именах с библиотекой <code>dependency-injector</code> и веб-фреймворком FastAPI.</p>
+<pre><code><span class="c"># containers.py — заменяет main.py: что чем создаётся</span>
+from dependency_injector import containers, providers
+from infra.postgres import PostgresUserRepository
+from users.service import UserService
+
+class Container(containers.DeclarativeContainer):
+    repo = providers.Singleton(PostgresUserRepository)
+    service = providers.Factory(UserService, repo=repo)
+    <span class="c"># в каких модулях искать Provide[...]</span>
+    wiring_config = containers.WiringConfiguration(modules=["api.routes"])
+
+<span class="c"># api/routes.py — ручка получает готовый сервис</span>
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends
+
+from containers import Container
+from users.service import UserService
+
+router = APIRouter()
+
+@router.get("/users/{user_id}/name")
+@inject
+def user_name(
+    user_id: int,
+    service: UserService = Depends(Provide[Container.service]),
+) -> str:
+    return service.get_user_name(user_id)</code></pre>
+      <p>Сами объекты создаёт не контейнер, а провайдеры. Контейнер — просто класс, атрибуты которого — провайдеры, что-то вроде книги рецептов. Провайдер — обычный объект Python, экземпляр <code>providers.Singleton</code> или <code>providers.Factory</code>. Внутри он хранит рецепт: какой класс создать и с какими аргументами. Его можно вызвать как функцию, и тогда он готовит объект по рецепту.</p>
+<pre><code>container = Container()
+
+<span class="c"># провайдер: хранит рецепт</span>
+<span class="c"># «UserService, в параметр repo — то, что даст провайдер repo»</span>
+container.service
+
+<span class="c"># вызов провайдера: создаёт UserService по рецепту</span>
+container.service()</code></pre>
+      <p>При вызове <code>container.service()</code> провайдер видит в рецепте <code>repo=repo</code> и сначала вызывает провайдер <code>repo</code>. Два вида провайдеров различаются тем, как долго живёт созданный объект. <code>Singleton</code> создаёт объект при первом вызове, запоминает его и дальше отдаёт тот же самый: репозиторий один на всё приложение. Так делают с объектами, которые дорого создавать или которые держат общее состояние, — например, пул соединений с базой. <code>Factory</code> создаёт новый объект при каждом вызове: каждая ручка получает свежий <code>UserService</code>.</p>
+      <p>Ещё два новых слова — в ручке. <code>Depends</code> — механизм FastAPI: этот параметр не придёт из HTTP-запроса, его нужно получить откуда-то ещё. <code>Provide[Container.service]</code> уточняет откуда. <code>Provide</code> — класс, и квадратные скобки после класса Python превращает в вызов его особого метода <code>__class_getitem__</code>. Это тот же механизм, на котором работают дженерики вроде <code>list[int]</code>, но <code>dependency-injector</code> реализует метод по-своему: он просто создаёт экземпляр. Так что <code>Provide[Container.service]</code> — это <code>Provide(Container.service)</code>, записанный скобками: метка, которая хранит ссылку на провайдер.</p>
+      <p>Метку читает декоратор <code>@inject</code>, и работает он в два момента. При старте приложения, когда создаётся контейнер, строка <code>wiring_config</code> велит библиотеке заглянуть в модуль <code>api.routes</code>. Там она находит функции с <code>@inject</code> и запоминает: «параметр <code>service</code> брать у провайдера <code>container.service</code>». При каждом вызове ручки параметр <code>service</code> никто не передаёт, и <code>@inject</code> сам вызывает запомненный провайдер и передаёт результат в функцию. Если убрать всю магию, <code>@inject</code> пишет за тебя одну строку:</p>
+<pre><code>def user_name(user_id: int) -> str:
+    service = container.service()      <span class="c"># вот это и делает @inject</span>
+    return service.get_user_name(user_id)</code></pre>
+      <p>В итоге ни один класс не создаёт себе зависимость сам, а все имена конкретных классов собраны в <code>containers.py</code>. Выглядит образцово, и отсюда ощущение, что инверсия уже сделана. Но контейнер отвечает только на вопрос «кто создаёт объект». На вопрос «кто под кого подстраивается» отвечает файл сервиса, и с этим же контейнером его можно написать двумя способами.</p>
+<p class="code-tag bad">Внедрение без инверсии</p>
+<pre><code><span class="c"># users/service.py</span>
+from infra.postgres import PostgresUserRepository
+
+class UserService:
+    <span class="c"># параметр объявлен конкретным классом</span>
+    def __init__(self, repo: PostgresUserRepository) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        return self.repository.get_by_id(user_id)["name"]</code></pre>
+<p class="code-tag good">Внедрение с инверсией</p>
+<pre><code><span class="c"># users/service.py</span>
+from typing import Protocol
+
+class UserRepo(Protocol):
+    def get_by_id(self, user_id: int) -> dict: ...
+
+class UserService:
+    <span class="c"># параметр объявлен протоколом из этого же файла</span>
+    def __init__(self, repo: UserRepo) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        return self.repository.get_by_id(user_id)["name"]</code></pre>
+      <p><code>containers.py</code> и ручка для обоих вариантов одинаковы до символа: контейнер в обоих случаях создаёт <code>PostgresUserRepository</code> и передаёт его в <code>UserService</code>. Различаются только импорт и тип параметра. В первом варианте <code>service.py</code> по-прежнему импортирует <code>infra.postgres</code>, поэтому всё сказанное про версию «до» остаётся в силе: без драйвера базы модуль сервиса не импортируется, а переезд на MongoDB — это правка в домене. Внедрение убрало из сервиса вызов конструктора, но не имя класса.</p>
+      <p>Первый вариант — не выдуманный антипример. Так написан официальный пример <code>fastapi-sqlalchemy</code> в репозитории самой <code>dependency-injector</code>. Его <code>services.py</code> начинается с двух импортов: <code>from .repositories import UserRepository</code> и <code>from .models import User</code>. <code>UserRepository</code> там — класс, который работает через сессию SQLAlchemy. <code>User</code> — не доменная сущность, а ORM-модель, то есть класс, описывающий таблицу <code>users</code> с колонкой <code>hashed_password</code>. Все методы сервиса возвращают эту ORM-модель. Значит, отказаться от SQLAlchemy, не переписав <code>services.py</code>, нельзя: без неё файл не импортируется, а типы, которые возвращают его методы, перестанут существовать.</p>
+      <p>Это не придирка к библиотеке: она отвечает за доставку объектов и делает это хорошо. Просто доставка и инверсия — разные вопросы. Ни один контейнер не может знать, в чьих словах написан твой интерфейс.</p>
+      <p>Сильнее всего варианты расходятся в тестах. Тест бизнес-правила не должен ходить в базу, поэтому репозиторий в нём подменяют. Вот как это выглядит в каждом варианте; первый повторяет приём из тестов того же официального примера.</p>
+<p class="code-tag bad">Без инверсии</p>
+<pre><code>from unittest import mock
+from infra.postgres import PostgresUserRepository  <span class="c"># тянет за собой драйвер базы</span>
+
+repo = mock.Mock(spec=PostgresUserRepository)
+repo.get_by_id.return_value = {"id": 1, "name": "Alice"}
+assert UserService(repo).get_user_name(1) == "Alice"</code></pre>
+<p class="code-tag good">С инверсией</p>
+<pre><code>class FakeRepo:
+    def get_by_id(self, user_id: int) -> dict:
+        return {"id": user_id, "name": "Alice"}
+
+assert UserService(FakeRepo()).get_user_name(1) == "Alice"</code></pre>
+      <p><code>mock.Mock</code> из стандартной библиотеки — объект-пустышка: он принимает вызов любого метода и возвращает то, что ему велели. Аргумент <code>spec=PostgresUserRepository</code> ограничивает его: разрешены только методы, которые есть у настоящего класса. Отсюда три неудобства первого варианта. Тест бизнес-правила импортирует модуль инфраструктуры, а вместе с ним и драйвер базы. Образец для подделки — класс <code>PostgresUserRepository</code> со всем, что в нём есть, а не то, чем пользуется сервис. Наконец, простой <code>FakeRepo</code> сюда не подставить: тайпчекер его отвергнет, потому что параметр требует именно <code>PostgresUserRepository</code>. <code>Mock</code> проходит только потому, что тайпчекер его не проверяет.</p>
+      <p>Во втором варианте образец для подделки — <code>UserRepo</code>: одна строка в файле сервиса, где перечислено ровно то, чем сервис пользуется. <code>FakeRepo</code> ничего не наследует, про базу не знает и подходит просто потому, что совпал с протоколом по форме. Это и имеют в виду, когда говорят, что протокол выражает требование домена: он перечисляет, что нужно сервису, а не что умеет конкретный класс.</p>
+      <p>Отсюда проверка на секунду. Не спрашивай, кто создаёт объект, и не ищи контейнер — открой файл сервиса и посмотри, куда смотрят его импорты.</p>
+      <p>Но и протокола в файле сервиса мало: важно, в чьих словах он написан и где лежит. Типичный путь к ошибке такой. Команда хочет подменять базу в тестах и описывает протоколом то, чем сервис уже пользуется, — сессию базы с методом <code>fetch_one</code>. Протокол есть, внедрение есть, тесты с фейком пишутся, а инверсии нет. Сравним с правильным вариантом.</p>
+<p class="code-tag bad">Протокол в словах драйвера</p>
+<pre><code><span class="c"># infra/db_protocol.py — протокол лежит в пакете инфраструктуры</span>
+class DbSession(Protocol):
+    def fetch_one(self, sql: str, params: tuple) -> Row: ...
+
+<span class="c"># users/service.py</span>
+from infra.db_protocol import DbSession  <span class="c"># импорт смотрит вниз</span>
+
+class UserService:
+    def __init__(self, db: DbSession) -> None:
+        self.db = db
+
+    def get_user_name(self, user_id: int) -> str:
+        <span class="c"># SQL оказался в бизнес-логике</span>
+        sql = "SELECT name FROM users WHERE id = %s"
+        return self.db.fetch_one(sql, (user_id,))["name"]</code></pre>
+<p class="code-tag good">Протокол в словах домена</p>
+<pre><code><span class="c"># users/service.py — протокол лежит рядом с тем, кто его вызывает</span>
+class UserRepo(Protocol):
+    def get_by_id(self, user_id: int) -> dict: ...
+
+class UserService:
+    def __init__(self, repo: UserRepo) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        return self.repository.get_by_id(user_id)["name"]
+
+<span class="c"># infra/postgres.py — SQL живёт здесь</span>
+class PostgresUserRepository:
+    def get_by_id(self, user_id: int) -> dict:
+        sql = "SELECT id, name FROM users WHERE id = %s"
+        row = self.db.fetch_one(sql, (user_id,))
+        return {"id": row["id"], "name": row["name"]}</code></pre>
+      <p>Разница сводится к трём вопросам, и каждый проверяется по этим двум листингам.</p>
+      <p><b>В чьих словах.</b> В первом варианте сигнатура — <code>fetch_one(sql, params) -> Row</code>: текст запроса, кортеж параметров, строка результата. Это понятия драйвера. Во втором — <code>get_by_id(user_id) -> dict</code>: идентификатор пользователя и его данные, понятия предметной области. Следствие видно прямо в коде: в первом варианте SQL стоит внутри <code>get_user_name</code>, среди бизнес-правил, во втором — в <code>infra/postgres.py</code>. Тот перевод с языка базы на язык домена, о котором шла речь выше, в первом варианте вернулся в сервис.</p>
+      <p><b>Где лежит.</b> В первом варианте протокол лежит в <code>infra/</code>, во втором — в <code>users/service.py</code>. Представим переезд на MongoDB. SQL у неё нет, и протокол <code>DbSession</code> с методом <code>fetch_one(sql, ...)</code> ей не подходит: его придётся заменить, а вместе с ним переписать <code>get_user_name</code>, который этот SQL составляет. Во втором варианте пишут класс <code>MongoUserRepository</code> с тем же методом <code>get_by_id</code> и меняют одну строку в контейнере. Ни один файл в <code>users/</code> не правят.</p>
+      <p><b>Кому принадлежит.</b> Здесь помогает проба на удаление из абзаца выше. Удалим <code>UserService</code>. Во втором варианте <code>UserRepo</code> сразу теряет смысл: он существовал только затем, чтобы описать нужды сервиса. В первом <code>DbSession</code> остаётся осмысленным: это описание сессии базы, и оно пригодится любому коду, который ходит в базу. Значит, он принадлежит инфраструктуре, а сервис лишь им пользуется. Владелец абстракции — тот, вместе с кем она теряет смысл.</p>
+      <p>Итог: интерфейс принадлежит потребителю — той самой стабильной стороне, — лежит в его пакете и сформулирован в его словах. Ни контейнер, ни само наличие протокола этого не гарантируют.</p>
+      <p>Заодно инверсия даёт повод вернуться к <a href="#constantine">зацеплению и связности</a> — двум величинам из первой части, которыми меряют ровно то, ради чего всё затевалось: цену будущей правки. Привычная формулировка «инверсия снижает зацепление и повышает связность» верна, но слишком гладкая, и на нашем примере видно, что происходит на самом деле.</p>
+      <p>Зацепление не исчезает. В обеих версиях у <code>UserService</code> ровно одна внешняя связь — меняются её поверхность и хозяин. В версии «до» сервис зацеплен за класс, у которого есть SQL, соединение, схема таблиц и версия <code>psycopg</code>: сломать сервис может любая из этих вещей, а решают о них чужие люди. В версии «после» он зацеплен за четыре строки, которые написал сам, и сломать его может только собственное решение эти строки изменить. Ровно об этом предупреждал Константин: связь переезжает, а не пропадает, и задача — оставить сильные связи внутри границы. Инверсия проводит границу так, что связка «SQL — курсор — драйвер» целиком остаётся внутри <code>infra/postgres.py</code>, а наружу проходит только слабая связь по сигнатуре.</p>
+      <p>А вот связность растёт по-настоящему. В версии «до» в <code>service.py</code> лежали две вещи, меняющиеся по разным поводам: правило «имя берут у пользователя по идентификатору» и решение «хранилище у нас PostgreSQL». Два повода для правки в одном файле — это и есть просевшая связность. После разворота повод у каждого файла один: <code>service.py</code> меняется, когда меняется правило, <code>infra/postgres.py</code> — когда меняется хранилище. Поэтому из пяти принципов SOLID именно инверсия ближе всех к сопровождаемости: остальные говорят, каким код должен быть, а этот прямо назначает, чей файл откроют при следующем изменении и кто решает, когда оно случится.</p>
+      <p>Заодно видно, чем контракт отличается от сигнатуры (А4). <code>UserRepo</code> даёт только сигнатуру: имя метода, типы аргументов, тип результата. О том, что произойдёт, когда пользователя нет, сигнатура молчит — реализация вправе вернуть <code>None</code>, поднять исключение или отдать пустой словарь, и тайпчекер пропустит все три. Сервис при этом сломается на двух. Контракт — ровно та часть обещания, которую сигнатура выразить не может: предусловия, постусловия, поведение на краях. Его место — докстринга протокола и набор тестов, общий для всех реализаций.</p>
+      <p>Алистер Кокберн в 2005 году описал ту же идею в масштабе всей системы: домен в середине, по его краю порты, снаружи адаптеры к базе, к очереди, к HTTP. Это гексагональная архитектура, она же порты и адаптеры. В настоящем коде маленькая схема выглядит ровно так же, только словарь домена в ней не учебный:</p>
+<pre><code><span class="c"># billing/ports.py — порт объявляет потребитель, в своих терминах</span>
+class PaymentGateway(Protocol):
+    def charge(self, customer: CustomerId, amount: Money) -> ChargeResult: ...
+
+<span class="c"># infra/stripe_gateway.py — деталь импортирует домен, а не наоборот</span>
+class StripeGateway:
+    def charge(self, customer: CustomerId, amount: Money) -> ChargeResult:
+        intent = stripe.PaymentIntent.create(...)
+        return ChargeResult.from_provider(intent)</code></pre>
+      <h4 class="sub">Итог: внедрение и инверсия</h4>
+      <p>Весь подраздел держится на двух вопросах, которые легко принять за один.</p>
+      <p><b>Внедрение отвечает на вопрос «кто и где собирает объекты».</b> Ответ «снаружи и в одном месте» даёт три вещи.</p>
+      <ol class="points">
+        <li><b>Разные сборки одного и того же кода.</b> В проде сервис получает <code>PostgresUserRepository</code>, на ноутбуке разработчика — хранилище в памяти, в тесте — фейк, а сам сервис при этом не меняется.</li>
+        <li><b>Управление временем жизни объектов.</b> В нашем контейнере репозиторий объявлен через <code>providers.Singleton</code> и существует в одном экземпляре на всё приложение, а сервис — через <code>providers.Factory</code> и создаётся заново на каждый вызов ручки. Решение записано в одной строке контейнера: чтобы поменять одно на другое, ни сервис, ни репозиторий открывать не нужно.</li>
+        <li><b>Подмена в тестах.</b> Она самая заметная из трёх, но не единственная.</li>
+      </ol>
+      <p><b>Инверсия отвечает на вопрос «чей файл править, когда что-то меняется снаружи».</b> Сложность вообще она не снижает. Она раскладывает изменения по файлам так, что чужие изменения — новую версию драйвера, смену базы, новый SDK — чинят в инфраструктуре, а бизнес-правила их не замечают. Правила меняются редко и по решению бизнеса, инфраструктура — часто и по чужим причинам. Инверсия защищает первое от второго.</p>
+      <p><b>Как они связаны.</b> Инверсии без внедрения не бывает: если сервис знает только протокол, кто-то снаружи обязан передать ему реализацию. Этот «кто-то» и есть внедрение — строка в <code>main.py</code> или контейнер. А вот внедрение без инверсии встречается сплошь и рядом: это первый вариант из разбора контейнеров и официальный пример <code>dependency-injector</code>. Поэтому фраза «внедрение нужно для тестов» верна только наполовину. Одно внедрение даёт тест, в котором подменить репозиторий можно, но проверить эту подмену нечем. Разберём это на одном изменении, по шагам.</p>
+      <p><b>Шаг 1. Исходное положение.</b> Сервис написан по первому варианту: параметр конструктора объявлен как <code>PostgresUserRepository</code>. Тест подменяет репозиторий через <code>mock.Mock(spec=PostgresUserRepository)</code>, велит методу <code>get_by_id</code> вернуть <code>{"id": 1, "name": "Alice"}</code> и проверяет, что <code>get_user_name(1)</code> возвращает <code>"Alice"</code>. Тест зелёный.</p>
+      <p><b>Шаг 2. Бизнес вводит правило:</b> имя неактивного пользователя не показывать. Разработчик добавляет в репозиторий метод <code>is_active</code>, а в сервис — проверку.</p>
+<pre><code><span class="c"># infra/postgres.py — новый метод</span>
+class PostgresUserRepository:
+    def get_by_id(self, user_id: int) -> dict: ...
+    def is_active(self, user_id: int) -> bool: ...
+
+<span class="c"># users/service.py — новое правило</span>
+class UserService:
+    def __init__(self, repo: PostgresUserRepository) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        if not self.repository.is_active(user_id):   <span class="c"># новая строка</span>
+            raise UserHidden(user_id)
+        return self.repository.get_by_id(user_id)["name"]</code></pre>
+      <p><b>Шаг 3. Что стало со старым тестом.</b> Его никто не трогал, и он по-прежнему зелёный. Причина в том, как устроен <code>Mock</code>. Метод <code>is_active</code> теперь есть у настоящего класса, поэтому <code>spec</code> его разрешает. Но что он должен вернуть, никто не задал, и <code>Mock</code> вернул то, что возвращает всегда, — ещё одну пустышку. В Python любой объект по умолчанию считается истинным, поэтому <code>not is_active(1)</code> даёт <code>False</code>, проверка пропускает, и тест добирается до <code>"Alice"</code>. Получается, что тест прошёл по ветке «пользователь активен», хотя его автор про активность ничего не писал. Ветку выбрал не автор, а случайная истинность пустышки. Сформулируй разработчик правило наоборот — <code>if self.repository.is_blocked(user_id)</code>, — и тот же тест упал бы на <code>UserHidden</code>, а причину пришлось бы искать далеко от места падения.</p>
+      <p><b>Шаг 4. Почему тайпчекер молчит.</b> Для тайпчекера <code>Mock</code> — объект типа <code>Any</code>: с ним совместимо всё, проверять нечего. Подставить вместо него честный <code>FakeRepo</code> в этом варианте нельзя: параметр требует <code>PostgresUserRepository</code>, и любой другой класс тайпчекер отвергнет. Остаётся унаследовать фейк от настоящего репозитория. Но тогда фейк получает его конструктор с подключением к базе, а каждый метод, который забыли переопределить, — вот тот же <code>is_active</code>, — тихо пойдёт в настоящую базу. В итоге фейки в тестах выпадают из-под проверки типов, и никто не сообщит, что они отстали от кода.</p>
+      <p><b>Шаг 5. То же изменение с инверсией.</b> Правило то же, но новый метод сначала дописывают в протокол — туда, где сервис объявляет, что ему нужно.</p>
+<pre><code><span class="c"># users/service.py</span>
+class UserRepo(Protocol):
+    def get_by_id(self, user_id: int) -> dict: ...
+    def is_active(self, user_id: int) -> bool: ...   <span class="c"># новая строка</span>
+
+class UserService:
+    def __init__(self, repo: UserRepo) -> None:
+        self.repository = repo
+
+    def get_user_name(self, user_id: int) -> str:
+        if not self.repository.is_active(user_id):
+            raise UserHidden(user_id)
+        return self.repository.get_by_id(user_id)["name"]</code></pre>
+      <p>Тесты ещё никто не открывал, а <code>mypy</code> уже сообщает о проблеме — ровно в той строке, где <code>FakeRepo</code> передаётся сервису:</p>
+<pre><code>error: Argument 1 to "UserService" has incompatible type "FakeRepo"; expected "UserRepo"
+note: "FakeRepo" is missing following "UserRepo" protocol member:
+note:     is_active</code></pre>
+      <p>Сообщение говорит ровно то, что нужно знать: фейк отстал от требований сервиса, в нём не хватает <code>is_active</code>. Автору теста придётся дописать метод и тем самым решить, активен ли его пользователь. Ветка, по которой идёт тест, становится решением, а не случайностью. Та же проверка работает и для <code>PostgresUserRepository</code>: забудут дополнить его — тайпчекер скажет об этом в месте сборки. Настоящая реализация и фейк сверяются с одним и тем же требованием. Будь <code>UserRepo</code> абстрактным классом, сработал бы и более грубый механизм: <code>FakeRepo</code>, унаследованный от <code>UserRepo</code>, без <code>is_active</code> просто не создался бы, и тест упал бы с <code>TypeError</code> даже в проекте без тайпчекера.</p>
+      <p><b>Шаг 6. Ещё одна цена — формат данных.</b> Без инверсии фейк обязан отдавать данные в том виде, в каком их отдаёт конкретный класс. В официальном примере <code>dependency-injector</code> это видно буквально: тест бизнес-логики создаёт ORM-объект <code>User(id=1, email=..., hashed_password="pwd", is_active=True)</code>. Переименуют колонку <code>hashed_password</code> — упадут тесты сервиса, хотя ни одно правило не изменилось. С инверсией фейк отдаёт то, что записано в протоколе, то есть данные в словах домена, и схема таблиц до тестов сервиса не доходит.</p>
+      <p>Если свести всё к одной фразе: внедрение делает подмену возможной, инверсия делает её проверяемой. Только когда требование сервиса записано протоколом в его собственном файле, тайпчекер может сверить с этим требованием и настоящую реализацию, и фейк. Нормальное тестирование даёт связка, а не одно внедрение.</p>
+      <p><b>Инверсия и многослойная архитектура.</b> Привычная схема «контроллер → сервис → репозиторий» старше DI-контейнеров. Слои как идея восходят к операционной системе THE Дейкстры (1968), контроллер — к MVC в Smalltalk (1979). Деление на представление, бизнес-логику и данные пришло из клиент-серверных систем 1990-х, а репозиторий и сервисный слой описали Фаулер (2002) и Эванс (2003). DI-контейнеры, прежде всего Spring, появились позже, в середине 2000-х, и сделали эту схему массовой: у каждого слоя интерфейс, всё собирает контейнер. Но стрелки в классической трёхзвенке идут сверху вниз: бизнес-слой зависит от слоя данных, а интерфейс репозитория лежит в слое данных и написан его словами. Это версия «до» — внедрение без инверсии. Развернуть стрелку предложили отдельно и позже: гексагональная архитектура Кокберна (2005), луковая архитектура Джеффри Палермо (2008), чистая архитектура Мартина (2012). Во всех трёх домен стоит в центре и владеет интерфейсами, а слой данных становится внешним кольцом, которое под них подстраивается. Поэтому «у нас слои и контейнер» ещё не значит «у нас инверсия»: проверять по-прежнему нужно, в чьём пакете и в чьих словах записан интерфейс репозитория.</p>
+      <h4 class="sub">Признаки нарушения</h4>
+      <p>Всё, что разобрано выше, сводится к нескольким признакам, которые видны при чтении кода. Хватит одного, чтобы заподозрить, что внедрение в проекте есть, а инверсии нет.</p>
+      <ol class="points">
+        <li><b>Файл сервиса импортирует инфраструктуру.</b> Драйвер базы, ORM-модели, HTTP-клиент, SDK платёжного провайдера или любой модуль из <code>infra/</code>. Так было в первом варианте с контейнером и в официальном примере <code>dependency-injector</code>, где <code>services.py</code> импортирует ORM-модель <code>User</code>.</li>
+        <li><b>Параметр конструктора объявлен конкретным классом.</b> <code>repo: PostgresUserRepository</code> вместо <code>repo: UserRepo</code>. Контейнер при этом может быть безупречным: он решает, кто создаёт объект, а не кто под кого подстраивается.</li>
+        <li><b>Абстракция есть, но написана словами поставщика.</b> Она названа в честь инструмента, а не задачи, повторяет его методы и лежит в <code>infra/</code>. Пример — <code>DbSession</code> с методом <code>fetch_one(sql, params)</code> из разбора выше. Правильная абстракция называется по тому, что нужно домену: <code>UserRepo</code>, <code>PaymentGateway</code>.</li>
+        <li><b>Смена поставщика требует правок в домене.</b> Переезд с PostgreSQL на MongoDB или с одного платёжного провайдера на другой заставляет открывать файлы в <code>users/</code> или <code>billing/</code>, а не только в <code>infra/</code> и контейнере.</li>
+        <li><b>Тест бизнес-правила собирает объекты инфраструктуры.</b> <code>mock.Mock(spec=PostgresUserRepository)</code>, ORM-объект <code>User(hashed_password=...)</code>, объект SDK вроде <code>stripe.PaymentIntent</code> — всё это признаки того, что сервис описан через конкретный класс и простой фейк ему не подходит.</li>
+      </ol>
+      <p><span class="lead warn">Когда вредит.</span> Инверсия нужна там, где есть реальная ось изменений: внешний сервис, ввод-вывод, то, что вы не контролируете. Прятать за интерфейсом стандартную библиотеку или единственную внутреннюю реализацию, которую никто не собирается заменять, значит платить косвенностью без выгоды (А5).</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Роберт Мартин, «дядя Боб»</h4>
+      <p class="years">род. 1952</p>
+      <p>Программист с 1970 года, один из подписантов Agile-манифеста, автор «Чистого кода» (2008) и «Чистой архитектуры» (2017).</p>
+      <p>Его главная заслуга — не столько изобретение принципов (часть принадлежит Мейеру и Лисков), сколько систематизация: благодаря ему словарь проектирования стал общим для миллионов разработчиков. Его советы о длине функций и комментариях сегодня активно оспаривают, в том числе Остерхаут.</p>
+      <p class="read"><b>Читать:</b> «Чистая архитектура» (2017) и «Чистый код» (2008) — лучшее соотношение цены и пользы среди книг о проектировании. Для первоисточника — «Design Principles and Design Patterns» (2000), короче и глубже большинства пересказов SOLID.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="conway">
+    <div class="body">
+      <h3>Закон Конвея</h3>
+      <div class="byline">Мелвин Конвей, 1968 <span class="sep"></span> <a class="ax" data-ax="A2" href="#ax-A2">А2</a> <a class="ax f" data-ax="F2" href="#ax-F2">Ф2</a></div>
+      <p>Конвей отправил статью «How Do Committees Invent?» в Harvard Business Review, но журнал отказал, сочтя тезис недоказанным. В апреле 1968 года её напечатал Datamation. Тезис: организация, проектирующая систему, создаёт дизайн, повторяющий структуру коммуникаций внутри этой организации. Название «закон Конвея» стало общеизвестным благодаря «Мифическому человеко-месяцу» Брукса.</p>
+      <p>Механизм прямо следует из аксиом. Интерфейс между модулями — это договорённость между людьми, которые их пишут. Где людям легко общаться, возникают сильные связи; где трудно, появляются формальные границы. Поэтому архитектура системы и структура команд — одна и та же структура, и менять одну без другой бесполезно: код будет сопротивляться.</p>
+      <p>Практическое следствие известно как обратный манёвр Конвея: если нужна определённая архитектура, сначала сформируйте команды соответствующей формы. Эту линию подробно развивает книга «Team Topologies» Мэттью Скелтона и Мануэла Паиса.</p>
+      <p><span class="lead">Признаки.</span> Две команды не могут выпустить релиз, не синхронизировавшись: граница между их сервисами проходит поперёк оси изменений. Микросервисов больше, чем людей, и каждая фича задевает пять из них. Модуль, у которого нет владельца, деградирует быстрее всех.</p>
+      <p><span class="lead warn">Когда вредит.</span> Закон описывает силу, а не цель. Резать систему точно по текущей оргструктуре так же опасно, как её игнорировать: команды реорганизуют чаще, чем переписывают системы.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Мелвин Конвей</h4>
+      <p class="years">статья 1968</p>
+      <p>Программист и исследователь. В 1958 году придумал термин «сопрограмма» (coroutine) и описал её в статье 1963 года о построении компиляторов — задолго до async/await.</p>
+      <p>Статья о комитетах десятилетиями оставалась нишевой и стала по-настоящему популярной лишь с распространением распределённых команд и микросервисов.</p>
+      <p class="read"><b>Читать:</b> «How Do Committees Invent?» — текст выложен на сайте самого Конвея.</p>
+    </aside>
+  </article>
+</section>
+
+<!-- ================= PART V ================= -->
+<section id="part-5">
+  <header class="part-head">
+    <span class="part-num">V</span>
+    <div><h2>Эволюция</h2><p>Система — не объект, а процесс. Три идеи о том, как проектировать то, что будет расти, и не сломать себе будущее по дороге.</p></div>
+  </header>
+
+  <article class="principle" id="gall">
+    <div class="body">
+      <h3>Закон Галла</h3>
+      <div class="byline">Джон Галл, 1975 <span class="sep"></span> <a class="ax f" data-ax="F1" href="#ax-F1">Ф1</a> <a class="ax" data-ax="A5" href="#ax-A5">А5</a></div>
+      <p>Галл был педиатром, а не инженером, и его книга «Systemantics» написана как полусатирический трактат о том, почему системы любой природы работают не так, как задумано. Самое цитируемое её положение: работающая сложная система всегда оказывается выросшей из работающей простой. Сложную систему, спроектированную с нуля, не удаётся заставить работать никакими заплатками, и начинать приходится заново, с простой работающей.</p>
+      <p>Для программной инженерии это аксиома об эволюции, прямо вытекающая из Ф1. Раз изменения непредсказуемы, архитектура, целиком спроектированная заранее, построена на догадках, и многие из них окажутся неверными. Правильные абстракции появляются в ответ на реальные изменения, а не на воображаемые.</p>
+      <p><span class="lead">Практика.</span> Ходячий скелет: первая версия — тончайший сквозной путь через все слои, работающий в проде, который затем наращивают. Переписывание легаси без «большого взрыва»: шаблон strangler fig, описанный Мартином Фаулером, когда новая система постепенно перехватывает функции старой, пока та не станет не нужна. Брукс описал обратную сторону закона, эффект второй системы: вторую систему инженер склонен перегружать всем, от чего пришлось отказаться в первой.</p>
+      <p><span class="lead">Признаки.</span> Двадцать сервисов до первого пользователя. Универсальная платформа, которую полтора года строят «сразу правильно». Переписывание с нуля, которое должно одновременно воспроизвести всё старое поведение и добавить новое.</p>
+      <p><span class="lead warn">Когда вредит.</span> Закон не отменяет проектирования. Некоторые решения дорого менять всегда — модель данных, внешний протокол, границы безопасности, — и их стоит продумать заранее. Простая система должна быть простой, а не небрежной.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Джон Галл</h4>
+      <p class="years">1925–2014</p>
+      <p>Педиатр из Анн-Арбора, больше сорока лет практиковавший медицину. Первое издание «General Systemantics» выпустил в 1975 году сам, получив множество отказов; через два года книгу переиздало издательство New York Times, позже она выходила как «The Systems Bible».</p>
+      <p>Под юмористической формой скрыты серьёзные наблюдения, на которые ссылались Гради Буч и Рассел Акофф.</p>
+      <p class="read"><b>Читать:</b> «The Systems Bible» — можно выборочно, это сборник афоризмов с разборами.</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="cunningham">
+    <div class="body">
+      <h3>Технический долг в исходном смысле</h3>
+      <div class="byline">Уорд Каннингем, 1992 <span class="sep"></span> <a class="ax f" data-ax="F1" href="#ax-F1">Ф1</a> <a class="ax" data-ax="A2" href="#ax-A2">А2</a></div>
+      <p>Метафору Каннингем предложил в коротком отчёте о системе управления портфелем WyCash для конференции OOPSLA. Её часто пересказывают как разрешение писать плохой код ради скорости, но исходная мысль другая. Выпустить первую версию кода — всё равно что взять заём: небольшой долг ускоряет разработку, если его быстро вернуть, переписав код. Опасность начинается, когда долг не возвращают, и каждая минута работы с не вполне правильным кодом становится процентами.</p>
+      <p>Что значит «не вполне правильный»? Команда WyCash постоянно лучше понимала предметную область, и код, написанный при старом понимании, расходился с новым. Долг — это разрыв между тем, как ты понимаешь задачу сейчас, и тем, как она выражена в коде. Возврат Каннингем называл консолидацией: переписать зрелые части так, чтобы они отражали накопленное понимание. В видео 2009 года он уточнял, что никогда не выступал за небрежный код: вернуть долг рефакторингом можно, только если код достаточно чист, чтобы его рефакторить.</p>
+      <p>Джордж Фэрбенкс замечает, что со временем в понятие свалили всё: нехватку квалификации, спешку, игнорирование архитектуры. От этого труднее выбрать лечение, ведь у разных проблем разные лекарства.</p>
+      <p><span class="lead">Признаки.</span> Названия в коде не совпадают с тем, как о предметной области говорит бизнес. Новичку объясняют: «здесь написано order, но на самом деле это подписка». Каждое изменение требует мысленного перевода с языка кода на язык задачи — это и есть выплата процентов.</p>
+      <p><span class="lead">Практика.</span> Отличай долг понимания (возвращается консолидацией) от просто плохого кода (это не заём, а убыток). Возвращай долг там, где проценты платятся чаще всего, — в самых часто изменяемых частях. Долг в коде, который никто не трогает, процентов не приносит.</p>
+      <p><span class="lead warn">Когда вредит.</span> Метафора портится, когда превращается в отговорку или в бесконечный бэклог «техдолга» без приоритетов. Долг без измеримых процентов — не долг, а расхождение во вкусах.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Уорд Каннингем</h4>
+      <p class="years">род. 1949</p>
+      <p>Изобрёл вики: первая, WikiWikiWeb, заработала в 1995 году. Вместе с Кентом Беком придумал CRC-карточки, стоял у истоков паттернов в ПО и экстремального программирования, подписал Agile-манифест.</p>
+      <p>Метафору долга придумал, чтобы объяснить руководству финансовой компании, зачем переписывать уже работающий код.</p>
+      <p class="read"><b>Читать:</b> отчёт «The WyCash Portfolio Management System» (пара страниц) и видео «Ward Explains Debt Metaphor».</p>
+    </aside>
+  </article>
+
+  <article class="principle" id="metz">
+    <div class="body">
+      <h3>Неправильная абстракция</h3>
+      <div class="byline">Сэнди Мец, 2014–2016 <span class="sep"></span> <a class="ax" data-ax="A5" href="#ax-A5">А5</a> <a class="ax" data-ax="A2" href="#ax-A2">А2</a></div>
+      <p>В докладе на RailsConf 2014 Мец произнесла фразу, разделившую аудиторию: «duplication is far cheaper than the wrong abstraction». В 2016 году в эссе «The Wrong Abstraction» она объяснила её через сценарий, который узнаёт почти каждый.</p>
+      <p>Программист видит дублирование, выносит его в общую функцию и даёт ей имя. Появляется абстракция. Потом приходит требование, которое почти подходит под неё, но не совсем, и следующий программист добавляет параметр и условие. Потом ещё один. Разобрать общий код никто не решается: он выглядит продуманным, в него вложены силы. Через год абстракция превращается в функцию с набором флагов, каждый из которых нужен одному вызывающему.</p>
+<pre><code>def export_report(rows, fmt="csv", for_accounting=False,
+                  legacy_header=False, skip_empty=True, locale=None):
+    ...  <span class="c"># сорок строк if-ов: у каждого вызывающего свой путь</span></code></pre>
+      <p>Лекарство непривычно: вернуть дублирование. Встроить общий код обратно в каждое место вызова, оставить в каждом только ветку, которую этот вызывающий действительно выполняет, и удалить остальное. Часто выясняется, что вызывающие делали совсем разные вещи и общей абстракции там не было. После этого можно заново найти настоящее общее и выделить его.</p>
+      <p>Связь с аксиомами прямая. Абстракция утверждает, что у нескольких мест одна ось изменений (А2). Если это ложь, абстракция сцепляет вещи, которые должны меняться независимо, и вдобавок стоит косвенности (А5). Принцип DRY в формулировке Ханта и Томаса говорит о дублировании знания, а не текста: два одинаковых фрагмента, выражающих разные правила, дублированием не являются.</p>
+      <p><span class="lead">Признаки в коде.</span> Булевы параметры, переключающие поведение. Проверки вида <code>if client == "acme"</code> внутри общего кода. Абстракция меняется при каждом новом использовании.</p>
+      <p><span class="lead warn">Когда вредит.</span> Фразу часто используют как индульгенцию на копипасту. Мец не говорит, что дублирование хорошо. Она говорит, что ошибочная абстракция хуже и что отказ от неё — нормальный шаг рефакторинга, а не поражение.</p>
+    </div>
+    <aside class="author" aria-label="Об авторе">
+      <h4>Сэнди Мец</h4>
+      <p class="years">POODR, 2012</p>
+      <p>Много лет писала ПО в Университете Дьюка, прежде чем стать одним из самых известных преподавателей объектного проектирования. Автор «Practical Object-Oriented Design in Ruby» и, вместе с Катриной Оуэн, «99 Bottles of OOP».</p>
+      <p>Известна жёсткими правилами для разработчиков (короткие методы, мало параметров), которые разрешает нарушать, если удалось убедить в этом напарника.</p>
+      <p class="read"><b>Читать:</b> эссе «The Wrong Abstraction». Пять минут, которые экономят месяцы.</p>
+    </aside>
+  </article>
+</section>
+
+<!-- ================= TENSIONS ================= -->
+<section id="tensions">
+  <div class="col">
+    <h2>Где принципы спорят</h2>
+    <p>Если принципы — теоремы из общих аксиом, их конфликты не парадокс, а сигнал: в конкретной ситуации одна аксиома весит больше другой. Спор разрешается не выбором любимого автора, а вопросом, какая аксиома здесь главная.</p>
+  </div>
+  <div class="tension">
+    <h3>DRY против неправильной абстракции</h3>
+    <p>Судья — А2: объединять стоит то, что меняется по одной причине. Одинаковый текст — повод задать вопрос, а не готовый ответ. Если фрагменты с большой вероятностью разойдутся через год, дублирование дешевле. Если это одно правило, записанное дважды, — выделяй сразу.</p>
+  </div>
+  <div class="tension">
+    <h3>Маленькие функции против глубоких модулей</h3>
+    <p>Мартин и Остерхаут спорят о пределе полезного дробления. Судьи — Ф2 и А5: деление оправдано, если после него читателю нужно держать в голове меньше, чем до. Если для понимания одного действия приходится прыгать по пяти файлам, сложность не уменьшилась, а переехала в связи.</p>
+  </div>
+  <div class="tension">
+    <h3>Инверсия зависимостей против закона Галла</h3>
+    <p>Мартин предлагает закладывать точки расширения, Галл — начинать с простого. Компромисс: инвертируй там, где ось изменений уже реальна (внешний сервис, ввод-вывод, вторая реализация, которая нужна сейчас), а воображаемые оси оставь до первого настоящего изменения. Выделить интерфейс из работающего кода дёшево; убрать ненужный, когда на него завязались, дороже, чем кажется.</p>
+  </div>
+  <div class="tension">
+    <h3>Сокрытие против закона Хайрама</h3>
+    <p>Парнас обещает, что клиенты не узнают о реализации, Хайрам — что узнают всё наблюдаемое. Правы оба: сокрытие определяет, за что ты отвечаешь, а закон Хайрама — сколько будет стоить это поменять. Отсюда практика: минимальная наблюдаемая поверхность и честная цена любого изменения публичного поведения.</p>
+  </div>
+</section>
+
+<!-- ================= CHECKLIST ================= -->
+<section id="checklist">
+  <div class="col">
+    <h2>Вопросы для дизайн-ревью</h2>
+    <p>Принципы легко забыть, вопросы легко задать. Каждый выведен из аксиомы или закона; если ответ на него неясен, это место стоит обсудить до мержа.</p>
+  </div>
+  <ul class="checklist">
+    <li><span class="tag"><a class="ax" data-ax="A1" href="#ax-A1">А1</a></span><span>Какое решение прячет этот модуль и насколько вероятно, что оно изменится?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A2" href="#ax-A2">А2</a></span><span>Какие файлы меняются в одних коммитах? Лежат ли они рядом?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A2" href="#ax-A2">А2</a></span><span>Какая самая сильная связь пересекает эту границу, и можно ли перевести её в более слабый вид?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A3" href="#ax-A3">А3</a></span><span>Кто владеет этим интерфейсом — потребитель или реализация? В чьих терминах он сформулирован?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A4" href="#ax-A4">А4</a></span><span>Что контракт обещает помимо сигнатуры? Что наблюдаемо, но не обещано?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A5" href="#ax-A5">А5</a></span><span>Во сколько раз интерфейс проще реализации? Что сломается, если удалить этот слой?</span></li>
+    <li><span class="tag"><a class="ax" data-ax="A6" href="#ax-A6">А6</a></span><span>Какое скрытое состояние или порядок вызовов нужно знать, чтобы этим пользоваться?</span></li>
+    <li><span class="tag">Конвей</span><span>Совпадает ли граница модуля с границей между командами, которые его меняют?</span></li>
+    <li><span class="tag">Галл</span><span>Какая простейшая работающая версия, из которой это вырастет?</span></li>
+    <li><span class="tag">Каннингем</span><span>Совпадают ли названия в коде с тем, как о задаче говорит бизнес?</span></li>
+  </ul>
+</section>
+
+<!-- ================= READING ================= -->
+<section id="reading">
+  <div class="col">
+    <h2>Что читать дальше</h2>
+    <p>Если выбрать пять первоисточников и читать их по порядку, получится короткий курс. Статья Парнаса 1972 года показывает, с чего всё началось. «No Silver Bullet» Брукса объясняет природу сложности. Доклад «Simple Made Easy» Хикки даёт словарь, чтобы о ней говорить. «A Philosophy of Software Design» Остерхаута — самая практичная книга о проектировании последних лет. «Tidy First?» Бека сводит всё к экономике изменений.</p>
+    <p>Если же читать одного автора, то Роберта Мартина: по соотношению вложенного времени и полученной пользы его две книги трудно обойти. «Чистая архитектура» (2017) — самая плотная. Главы о SOLID, о принципах компонентов (три о связности — REP, CCP, CRP, три о зацеплении — ADP, SDP, SAP) и о правиле зависимостей — это аксиомы А2 и А3 этого текста, развёрнутые на целую книгу. «Чистый код» (2008) работает уровнем ниже: имена, функции, обработка ошибок, тесты. Его стоит читать вместе с возражениями Остерхаута — советы о длине функций и комментариях как раз то место, где Ф2 и А5 спорят с дроблением.</p>
+    <p>Для второго круга: «Out of the Tar Pit» Мозли и Маркса, первые главы «Software Engineering at Google» и диалог Остерхаута с Мартином на GitHub — редкий случай, когда два классика спорят по существу и письменно.</p>
+  </div>
+  <footer>Составлено по первоисточникам. Формулировки принципов пересказаны своими словами; годы указаны по первым публикациям идей.</footer>
+</section>
+
+</main>
+</div>
+<script>
+(function(){
+  const AX = {
+    F1:{code:"Ф1", label:"Изменения неизбежны", tip:"Программы меняются, и предсказать как — нельзя"},
+    F2:{code:"Ф2", label:"Внимание ограничено", tip:"Человек удерживает в голове очень мало"},
+    A1:{code:"А1", label:"Сокрытие решений", from:["F1"], tip:"Сокрытие решений: граница вокруг того, что вероятно изменится"},
+    A2:{code:"А2", label:"Связность и зацепление", from:["F1","F2"], tip:"Связность и зацепление — одна ось: что меняется вместе, лежит вместе"},
+    A3:{code:"А3", label:"Зависимость к стабильному", from:["F1"], tip:"Зависимости направлены к стабильности; абстракцию объявляет потребитель"},
+    A4:{code:"А4", label:"Контракт, а не сигнатура", from:["F1"], tip:"Абстракция — контракт, а не сигнатура; всё наблюдаемое станет зависимостью"},
+    A5:{code:"А5", label:"Косвенность стоит денег", from:["F2"], tip:"Косвенность стоит денег: слой должен прятать больше, чем добавляет"},
+    A6:{code:"А6", label:"Явное лучше скрытого", from:["F2"], tip:"Явное лучше скрытого: состояние, порядок и тайминг — самые дорогие связи"}
+  };
+  const PR = [
+    {id:"parnas", label:"Сокрытие информации", who:"Парнас", part:0, from:["A1"]},
+    {id:"dijkstra", label:"Разделение ответственности", who:"Дейкстра", part:0, from:["F2","A2"]},
+    {id:"constantine", label:"Зацепление и связность", who:"Константин", part:0, from:["F1","A2"]},
+    {id:"connascence", label:"Connascence", who:"Пейдж-Джонс", part:0, from:["A2","A6"]},
+    {id:"liskov", label:"Подстановка по поведению", who:"Лисков", part:1, from:["A4"]},
+    {id:"meyer", label:"Проектирование по контракту", who:"Мейер", part:1, from:["A4","A6"]},
+    {id:"hyrum", label:"Закон Хайрама", who:"Райт", part:1, from:["A4","A1"]},
+    {id:"brooks", label:"Существенная сложность", who:"Брукс", part:2, from:["F2","A5"]},
+    {id:"hickey", label:"Переплетение", who:"Хикки", part:2, from:["A6","A2"]},
+    {id:"ousterhout", label:"Глубокие модули", who:"Остерхаут", part:2, from:["A5","A1"]},
+    {id:"martin", label:"Стабильные зависимости", who:"Мартин", part:3, from:["A3"]},
+    {id:"conway", label:"Закон Конвея", who:"Конвей", part:3, from:["A2","F2"]},
+    {id:"gall", label:"Закон Галла", who:"Галл", part:4, from:["F1","A5"]},
+    {id:"cunningham", label:"Технический долг", who:"Каннингем", part:4, from:["F1","A2"]},
+    {id:"metz", label:"Неправильная абстракция", who:"Мец", part:4, from:["A5","A2"]}
+  ];
+  const PARTS = ["I","II","III","IV","V"];
+
+  /* tooltips on axiom badges */
+  document.querySelectorAll(".ax[data-ax]").forEach(a => {
+    const d = AX[a.dataset.ax]; if (d) a.setAttribute("data-tip", d.tip);
+  });
+
+  /* ---------- derivation map ---------- */
+  const svg = document.getElementById("map");
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+  const TOP = 62, STEP = 28, GAP = 18;
+  let y = TOP, prevPart = 0;
+  PR.forEach((p, i) => { if (i && p.part !== prevPart) y += GAP; p.y = y; prevPart = p.part; y += STEP; });
+  const H = y - STEP + 34;
+  svg.setAttribute("viewBox", `0 0 960 ${H}`);
+
+  const axIds = ["A1","A2","A3","A4","A5","A6"];
+  const y0 = PR[0].y, y1 = PR[PR.length-1].y;
+  axIds.forEach((id, i) => AX[id].y = y0 + (y1 - y0) * i / (axIds.length - 1));
+  const mean = ids => ids.reduce((s, id) => s + AX[id].y, 0) / ids.length;
+  AX.F1.y = mean(["A1","A2","A3","A4"]);
+  AX.F2.y = mean(["A2","A5","A6"]);
+
+  el("text", {x:0, y:24, class:"m-col"}, svg).textContent = "Факты о мире";
+  el("text", {x:280, y:24, class:"m-col"}, svg).textContent = "Аксиомы";
+  el("text", {x:628, y:24, class:"m-col"}, svg).textContent = "Принципы";
+  el("text", {x:955, y:24, class:"m-col", "text-anchor":"end"}, svg).textContent = "Часть";
+
+  const gEdges = el("g", {}, svg), gNodes = el("g", {}, svg);
+  const nodes = {}, edges = [];
+  const XF = 200, XA0 = 280, XA1 = 530, XP = 622;
+
+  function addEdge(from, to){
+    const fy = AX[from].y, isFact = from[0] === "F";
+    let d, col;
+    if (to[0] === "A") { const ty = AX[to].y; d = `M${XF} ${fy} C${XF+40} ${fy},${XA0-40} ${ty},${XA0} ${ty}`; col = 0; }
+    else { const ty = PR.find(p => p.id === to).y;
+      d = isFact ? `M${XF} ${fy} C${XF+220} ${fy},${XP-200} ${ty},${XP} ${ty}`
+                 : `M${XA1} ${fy} C${XA1+46} ${fy},${XP-46} ${ty},${XP} ${ty}`; col = 1; }
+    edges.push({from, to, col, el: el("path", {d, class:"m-edge"}, gEdges)});
+  }
+  axIds.forEach(id => AX[id].from.forEach(f => addEdge(f, id)));
+  PR.forEach(p => p.from.forEach(f => addEdge(f, p.id)));
+
+  function nodeGroup(id, cls, label, target){
+    const g = el("g", {class:`m-node ${cls}`, tabindex:"0", role:"link", "aria-label":label}, gNodes);
+    g.addEventListener("mouseenter", () => highlight(id));
+    g.addEventListener("mouseleave", clear);
+    g.addEventListener("focus", () => highlight(id));
+    g.addEventListener("blur", clear);
+    const go = () => { location.hash = target; };
+    g.addEventListener("click", go);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    nodes[id] = g; return g;
+  }
+  ["F1","F2"].forEach(id => {
+    const a = AX[id], g = nodeGroup(id, "m-fact", `${a.code} ${a.tip}`, "ax-"+id);
+    el("rect", {x:0, y:a.y-20, width:XF, height:40, rx:4, class:"m-shape"}, g);
+    const t = el("text", {x:14, y:a.y+5}, g);
+    el("tspan", {"font-weight":"700"}, t).textContent = a.code;
+    el("tspan", {dx:"8"}, t).textContent = a.label;
+  });
+  axIds.forEach(id => {
+    const a = AX[id], g = nodeGroup(id, "m-axiom", `${a.code} ${a.tip}`, "ax-"+id);
+    el("rect", {x:XA0, y:a.y-17, width:XA1-XA0, height:34, rx:17, class:"m-shape"}, g);
+    const t = el("text", {x:XA0+16, y:a.y+5}, g);
+    el("tspan", {"font-weight":"700"}, t).textContent = a.code;
+    el("tspan", {dx:"8"}, t).textContent = a.label;
+  });
+  let lastPart = -1;
+  PR.forEach(p => {
+    if (p.part !== lastPart) { el("text", {x:955, y:p.y+4, class:"m-part"}, gNodes).textContent = PARTS[p.part]; lastPart = p.part; }
+    const g = nodeGroup(p.id, "m-pr", `${p.label}, ${p.who}`, p.id);
+    el("rect", {x:XP-4, y:p.y-13, width:330, height:26, fill:"transparent"}, g);
+    el("circle", {cx:XP+6, cy:p.y, r:4, class:"m-dot"}, g);
+    const t = el("text", {x:XP+20, y:p.y+5}, g);
+    t.appendChild(document.createTextNode(p.label));
+    el("tspan", {dx:"8", class:"who"}, t).textContent = p.who;
+  });
+
+  function related(id){
+    const s = new Set([id]);
+    const pr = PR.find(p => p.id === id);
+    if (pr) { pr.from.forEach(f => { s.add(f); (AX[f].from || []).forEach(ff => s.add(ff)); }); }
+    else if (id[0] === "A") { AX[id].from.forEach(f => s.add(f)); PR.forEach(p => { if (p.from.includes(id)) s.add(p.id); }); }
+    else { axIds.forEach(a => { if (AX[a].from.includes(id)) s.add(a); });
+      PR.forEach(p => { if (p.from.some(f => s.has(f))) s.add(p.id); }); }
+    return s;
+  }
+  function highlight(id){
+    const s = related(id);
+    Object.entries(nodes).forEach(([k, g]) => { g.classList.toggle("dim", !s.has(k)); g.classList.toggle("on", s.has(k)); });
+    edges.forEach(e => { const on = s.has(e.from) && s.has(e.to); e.el.classList.toggle("on", on); e.el.classList.toggle("dim", !on); });
+  }
+  function clear(){
+    Object.values(nodes).forEach(g => g.classList.remove("dim","on"));
+    edges.forEach(e => e.el.classList.remove("on","dim"));
+  }
+
+  /* one orchestrated moment: edges draw in once */
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    edges.forEach(e => { const L = e.el.getTotalLength(); e.el.style.strokeDasharray = L; e.el.style.strokeDashoffset = L; });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      edges.forEach(e => {
+        e.el.style.transition = `stroke-dashoffset 700ms cubic-bezier(.3,.6,.2,1) ${e.col ? 520 : 120}ms`;
+        e.el.style.strokeDashoffset = 0;
+      });
+      setTimeout(() => edges.forEach(e => { e.el.style.strokeDasharray = ""; e.el.style.strokeDashoffset = ""; e.el.style.transition = ""; }), 1500);
+    }));
+  }
+
+  /* ---------- nav ---------- */
+  const toc = document.getElementById("toc"), btn = document.querySelector(".toc-toggle");
+  btn.addEventListener("click", () => { const o = toc.classList.toggle("open"); btn.setAttribute("aria-expanded", o); });
+  toc.addEventListener("click", e => { if (e.target.closest("a")) { toc.classList.remove("open"); btn.setAttribute("aria-expanded", false); } });
+
+  const links = {};
+  toc.querySelectorAll('a[href^="#"]').forEach(a => links[a.getAttribute("href").slice(1)] = a);
+  const targets = Object.keys(links).map(id => document.getElementById(id)).filter(Boolean)
+    .filter(t => t.id !== "top");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        Object.values(links).forEach(a => a.classList.remove("active"));
+        const a = links[en.target.id]; if (a) a.classList.add("active");
+      }
+    });
+  }, {rootMargin:"-15% 0px -75% 0px"});
+  targets.forEach(t => io.observe(t));
+})();
+</script>
+</body>
+</html>
